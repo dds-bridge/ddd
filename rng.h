@@ -143,7 +143,7 @@ class cRNG
                      { return RNG;}
 
         const char *getpszGen()
-                     { return (const char*)szGen;}
+                     { return static_cast<const char*>(szGen);}
 
   protected:
               eRNG RNG;
@@ -164,7 +164,7 @@ class cRNG_QD1 : public cRNG
 
                    // generator name
       virtual char *getszRandom()
-                     { return "QD1";}
+                     { return strdup("QD1");}
 
                    // next random number
     virtual
@@ -189,7 +189,7 @@ class cRNG_WELL : public cRNG
 
                    // generator name
       virtual char *getszRandom()
-                     { return "WELL1024u";}
+                     { return strdup("WELL1024u");}
 
                    // next random number
     virtual
@@ -212,7 +212,7 @@ class cRNG_Mother : public cRNG
 
                    // generator name
       virtual char *getszRandom()
-                     { return "Mother";}
+                     { return strdup("Mother");}
 
                    // next random number
     virtual
@@ -236,7 +236,7 @@ class cRNG_MT19937 : public cRNG
 
                    // generator name
       virtual char *getszRandom()
-                     { return "MT19937";}
+                     { return strdup("MT19937");}
 
                    // next random number
     virtual

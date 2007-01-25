@@ -1,0 +1,71 @@
+# This is a Makefile for the ddd test program,
+# for Windows and the Microsoft Visual C++ compiler.
+
+# It does assume a Unix-like setup for some commands,
+# but if you only want to call "make" with the default target,
+# you should be OK.
+
+# The test program itself does not use multi-threading, 
+# but the DLL might, depending on how it was compiled.
+
+# If your Microsoft compiler is not called cl, change it here.
+CC		= cl
+CC_FLAGS     	= /O2 /Oi /Ot /Oy /GL
+LINK_FLAGS	= /LTCG
+
+# These flags are not turned on by default, but DDS should pass them.
+# Turn them on below.
+WARN_FLAGS	=		\
+	/Wall			\
+	/wd4127			\
+	/wd4514			\
+	/wd4555			\
+	/wd4668			\
+	/wd4711			\
+	/wd4820			\
+	/wd4996			\
+	/WX
+
+# Here you can turn on warnings.
+# CC_FULL_FLAGS	= $(CC_FLAGS)
+CC_FULL_FLAGS	= $(CC_FLAGS) $(WARN_FLAGS)
+
+DTEST		= ddd
+
+DLLBASE		= ../lib/dds
+DLL 		= $(DLLBASE).dll
+DLIB 		= $(DLLBASE).lib
+EXPORTER	= Exports.def
+
+TEST_SOURCE_FILES 	=	\
+	ddd.cpp			\
+	defs.cpp		\
+	giblib.cpp		\
+	rng.cpp			\
+	timer.cpp
+
+
+TEST_OBJ_FILES	= $(subst .cpp,.obj,$(TEST_SOURCE_FILES))
+
+
+ddd:	$(TEST_OBJ_FILES)
+	link $(TEST_OBJ_FILES) $(DLIB) /LTCG /out:$(DTEST).exe
+
+%.obj:	%.cpp
+	$(CC) $(CC_FULL_FLAGS) /c $< /Fo$*.obj
+
+depend:
+	makedepend -Y -o.obj -- $(TEST_SOURCE_FILES) $(DTEST).cpp
+
+clean:
+	rm -f $(TEST_OBJ_FILES) $(DTEST).{obj,exe} 
+
+
+# DO NOT DELETE
+
+ddd.obj: portab.h ../include/dll.h giblib.h defs.h rng.h timer.h
+defs.obj: defs.h
+giblib.obj: giblib.h defs.h rng.h
+rng.obj: portab.h rng.h
+timer.obj: timer.h
+ddd.obj: portab.h ../include/dll.h giblib.h defs.h rng.h timer.h

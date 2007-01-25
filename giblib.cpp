@@ -36,8 +36,8 @@
 
 cGIBLib::cGIBLib()
 {
-  pszComment = (char*)realloc(0,GIBLIB_LENLINE*sizeof(char));
-  pszName    = (char*)realloc(0,sizeof(char));
+  pszComment = static_cast<char *>(realloc(0,GIBLIB_LENLINE*sizeof(char)));
+  pszName    = static_cast<char *>(realloc(0,sizeof(char)));
   pszName[0] = '\0';
   nPlayed = 0;
   nLine = 0;
@@ -49,8 +49,8 @@ cGIBLib::cGIBLib()
 
 cGIBLib::~cGIBLib()
 {
-  pszComment = (char*)realloc(pszComment,0);
-  pszName    = (char*)realloc(pszName,0);
+  pszComment = static_cast<char *>(realloc(pszComment,0));
+  pszName    = static_cast<char *>(realloc(pszName,0));
 
   if(pRNG)
     delete pRNG;
@@ -99,15 +99,16 @@ bool cGIBLib::generateDeal(int ntrick)
   { if(ncard == 1)
       icard = 0;
     else
-      icard = (int)pRNG->randomUint(ndeck);
+      icard = static_cast<int>
+        (pRNG->randomUint(static_cast<unsigned>(ndeck)));
 
     // add new card given by lsuit[icard] and lcard[icard]
     setBit(mPlayerSuit[player][lsuit[icard]],lcard[icard]);
 
     // shorten deck (remove this card)
     if(icard < ndeck-1)
-    { memmove(lsuit+icard,lsuit+icard+1,(ndeck-1-icard)*sizeof(int));
-      memmove(lcard+icard,lcard+icard+1,(ndeck-1-icard)*sizeof(int));
+    { memmove(lsuit+icard,lsuit+icard+1,static_cast<size_t>(ndeck-1-icard)*sizeof(int));
+      memmove(lcard+icard,lcard+icard+1,static_cast<size_t>(ndeck-1-icard)*sizeof(int));
     }
     ncard--;
     ndeck--;
@@ -133,8 +134,9 @@ enum eCard cGIBLib::getCard(char chcard)
   else if(tolower(chcard) == 't')
     return eCARD_10;
   else if(isdigit(chcard))
-  { if(((int)chcard >= (int)'2') && ((int)chcard <= (int)'9'))
-      return (enum eCard)(14 - (int)chcard + (int)'0');
+  { if((static_cast<int>(chcard) >= static_cast<int>('2')) && 
+      (static_cast<int>(chcard) <= static_cast<int>('9')))
+      return static_cast<enum eCard>(14 - static_cast<int>(chcard) + static_cast<int>('0'));
   }
 
   return eCARD_NONE;
@@ -241,11 +243,11 @@ bool cGIBLib::getTricks(int i, int *pleader, int *ptrumps, int *pntrick)
 
   // number of tricks;
   *pntrick = -1;
-  char *pch = szTricks + i;
-  if(isdigit(*pch))
-    *pntrick = (*pch - '0');
-  else if(isxdigit(*pch))
-    *pntrick = (toupper(*pch) - 'A' + 10);
+  char *pch_local = szTricks + i;
+  if(isdigit(*pch_local))
+    *pntrick = (*pch_local - '0');
+  else if(isxdigit(*pch_local))
+    *pntrick = (toupper(*pch_local) - 'A' + 10);
   if((*pntrick < 0) || (*pntrick > 13))
   { *pntrick = 0;
     return false;
@@ -490,8 +492,8 @@ bool cGIBLib::readComment()
   { pch++;
     if(*pch == '\0')
     { // line end, save the line sofar, read next line
-      len = strlen(pchstart);
-      pszComment = (char*)realloc(pszComment,(pos+len+2)*sizeof(char));
+      len = static_cast<int>(strlen(pchstart));
+      pszComment = static_cast<char*>(realloc(pszComment,static_cast<size_t>(pos+len+2)*sizeof(char)));
       strcpy(pszComment+pos,pchstart);
       pos += len;
       strcpy(pszComment+pos,"\n");
@@ -506,8 +508,8 @@ bool cGIBLib::readComment()
   pch++;
   chkeep = *pch;
   *pch = '\0';
-  len = strlen(pchstart);
-  pszComment = (char*)realloc(pszComment,(pos+len+2)*sizeof(char));
+  len = static_cast<int>(strlen(pchstart));
+  pszComment = static_cast<char*>(realloc(pszComment,static_cast<size_t>(pos+len+2)*sizeof(char)));
   strcpy(pszComment+pos,szLine);
   pos += len;
   strcpy(pszComment+pos,"\n");
@@ -819,16 +821,16 @@ bool cGIBLib::setPlayed()
 
 void cGIBLib::setName(char *pszname)
 {
-  char *pch=pszname;
+  char *pch_local=pszname;
   int len = 0;
 
-  while((*pch != ' ') && (*pch != '\n') && (*pch != '\0') && (*pch != '}'))
+  while((*pch_local != ' ') && (*pch_local != '\n') && (*pch_local != '\0') && (*pch_local != '}'))
   { len++;
-    pch++;
+    pch_local++;
   }
 
-  pszName = (char*)realloc(pszName,(len+1)*sizeof(char));
-  strncpy(pszName,pszname,len);
+  pszName = static_cast<char*>(realloc(pszName,static_cast<size_t>(len+1)*sizeof(char)));
+  strncpy(pszName,pszname, static_cast<size_t>(len));
   pszName[len] = '\0';
 
 } // cGIBLib::setName

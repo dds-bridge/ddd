@@ -27,6 +27,7 @@
 #include <ctype.h>
 
 #include "defs.h"
+#include "portab.h"
 
 const char *szPLAYER[4]   = {"west", "north", "east", "south"};
 const char  chPLAYER[4]   = {'W', 'N', 'E', 'S'};
@@ -74,9 +75,9 @@ const unsigned int ulNotMASK[32]
 int fromHex(char ch)
 {
   if(isdigit(ch))
-    return ((int)tolower(ch) - (int)'0');
+    return (static_cast<int>(tolower(ch)) - static_cast<int>('0'));
   else
-    return ((int)tolower(ch) - (int)'a' + 10);
+    return (static_cast<int>(tolower(ch)) - static_cast<int>('a' + 10));
 
 } // fromHex
 // *****************************************************************************
@@ -84,9 +85,10 @@ int fromHex(char ch)
 char toHex(int i)
 {
   if(i < 10)
-    return (char)(i + '0');
+    return static_cast<char>(i + '0');
   else
-    return toupper((char)(i - 10 + (int)'a'));
+    return static_cast<char>
+      (toupper(static_cast<char>(i - 10 + static_cast<int>('a'))));
 
 } // toHex
 // *****************************************************************************
@@ -145,7 +147,7 @@ int bitCount(ushort m)
 
 int leastSignificant1Bit(ushort m)
 {
-  m = (ushort)((ushort)m ^ ((ushort)m - 1));
+  m = static_cast<ushort>(static_cast<ushort>(m) ^ (static_cast<ushort>(m) - 1));
 
   return bitCount(m) - 1;
 
@@ -160,18 +162,21 @@ int mostSignificant1Bit(ushort m)
   else
     return MSBitInByte[m];
 */
-  register unsigned int x = (m | (m >> 1));
+  register unsigned int x = static_cast<unsigned>(m | (m >> 1));
   x |= (x >> 2);
   x |= (x >> 4);
   x |= (x >> 8);
 
   //x = (x & (~(x >> 1)));
-  return bitCount(x) - 1;
+  return bitCount(static_cast<ushort>(x)) - 1;
 
 } // mostSignificant1Bit
 // *****************************************************************************
 void clearBit(ushort &m, int ibit) { m &= usNotMASK[ibit];}
-bool    isBit(ushort m, int ibit)  { return (m & usMASK[ibit]);}
+bool    isBit(ushort m, int ibit)  
+{ 
+  return ((m & usMASK[ibit]) ? true : false);
+}
 void   setBit(ushort &m, int ibit) { m |= usMASK[ibit];}
 /* ************************************************************************** */
 
@@ -205,7 +210,7 @@ char *format(char str[], char sz[])
 {
   int len, n, istart, ndigit, i, pos;
 
-  len = strlen(str);
+  len = static_cast<int>(strlen(str));
   n = len / 3;
   if(3*n != len)
     n++;
@@ -215,7 +220,7 @@ char *format(char str[], char sz[])
       ndigit = len - 3*(n-1);
     else
       ndigit = 3;
-    strncpy(sz+pos,str+istart,ndigit);
+    strncpy(sz+pos,str+istart, static_cast<size_t>(ndigit));
     istart += ndigit;
     pos += ndigit;
     if(i < n-1)
@@ -233,7 +238,7 @@ char *format(char str[], char sz[])
 char *mPerSec(unsigned int count, double elapsed, char sz[])
 {
   if(elapsed >= 0.01)
-    sprintf(sz,"%0.3lfm/s",1.0e-6*(double)count/elapsed);
+    sprintf(sz,"%0.3fm/s",1.0e-6*static_cast<double>(count)/elapsed);
   else
     strcpy(sz,"-.---m/s");
 

@@ -24,13 +24,15 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
    ************************************************************************** */
+// Changes in cleanSB 07-10-11 by Bo Haglund due to changes in dds 1.1.7 */ 
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
 #include <ctype.h>
+
+#include "../include/dll.h"
+#include "portab.h"
 
 // -----------------------------------------------------------------------------
 
@@ -53,7 +55,7 @@
 //
 // -----------------------------------------------------------------------------
 
-#include "dds11x.h"
+#include "../include/dll.h"
 #include "giblib.h"
 #include "timer.h"
 
@@ -71,37 +73,6 @@
          15-Jul-2006  fix 0 elapsed times for -gen
          25-Jan-2007  changes to use dds11x
 */
-// -----------------------------------------------------------------------------
-// solve board status
-// -----------------------------------------------------------------------------
-
-// solve board status
-struct sbstatus
-{   int Code;
-   char szCode[32];
-};
-
-#define SBSTATUS_NUM 15
-#define SBSTATUS_MIN -11
-#define SBSTATUS_NOFAULT 12
-#define SBSTATUS_CANCELLED 2
-struct sbstatus szSBStatus[SBSTATUS_NUM]
-  = { { -11, "invalid status (less than -10)"},
-      { -10, "too many cards (more than 52)"},
-      {  -9, "solutions > 3"},
-      {  -8, "solutions < 1"},
-      {  -7, "target > 13"},
-      {  -6, "invalid status 6"},
-      {  -5, "target < -1"},
-      {  -4, "duplicate cards"},
-      {  -3, "target > number of tricks left"},
-      {  -2, "number of cards 0"},
-      {  -1, "unknown fault"},
-      {   0, "invalid status 0"},
-      {   1, "no fault"},
-      {   2, "cancelled 2"},
-      {   3, "invalid status > 1"}
-    };
 
 // -----------------------------------------------------------------------------
 // prototypes defined in this file
@@ -113,7 +84,7 @@ void getSBScore(const struct futureTricks &fut, int *pmaxscore,
 bool generate(int gen, unsigned int genseed, int gencards, int gentricks);
 bool giblib(char *pszfile, int target, int sol, int mode, char *pszgiblib);
 FILE *openFile(char *pszfile);
-void playDD(cGIBLib *pgib, int target, int sol, int trumps, int leader);
+void playDD(cGIBLib *pgib, int target, int sol);
 void printSBScore(int target, int solutions, struct futureTricks *pfut,
                   double elapsed);
 void printSBScore(bool bscore[14], ushort m[14][4]);
@@ -228,7 +199,7 @@ int main(int argc, char *argv[])
       else if(strncasecmp(argv[iarg],"-gen=",5) == 0)
         gen = atol(argv[iarg]+5);
       else if(strncasecmp(argv[iarg],"-genseed=",9) == 0)
-        genseed = (unsigned int)atol(argv[iarg]+9);
+        genseed = static_cast<unsigned int>(atol(argv[iarg]+9));
       else if(strncasecmp(argv[iarg],"-gencards=",10) == 0)
         gencards = atol(argv[iarg]+10);
       else if(strncasecmp(argv[iarg],"-gentricks=",11) == 0)
@@ -325,7 +296,7 @@ int main(int argc, char *argv[])
   }
 
   if(bplaydd)
-  { playDD(&gib,target,solutions,trumps,leader);
+  { playDD(&gib,target,solutions);
     goto cleanup;
   }
 
@@ -342,8 +313,7 @@ int main(int argc, char *argv[])
   fflush(stdout);
 
   timer.start();
-  InitStart();
-  sbcode = SolveBoard(dl,target,solutions,mode,&fut);
+  sbcode = SolveBoard(dl,target,solutions,mode,&fut,0);
   timer.check();
   if(testSBCode(sbcode) == false)
     exit(-1);
@@ -359,25 +329,7 @@ int main(int argc, char *argv[])
 
 void cleanSB()
 {
-  // this is the detach code from DDS
-
-  if(bestMove)
-    free(bestMove);
-  bestMove = 0;
-  if(nodeCards)
-    free(nodeCards);
-  nodeCards = 0;
-  if(winCards)
-    free(winCards);
-  winCards = 0;
-  if(ttStore)
-    free(ttStore);
-  ttStore = 0;
-  if(rel)
-    free(rel);
-  rel = 0;
-
-} // cleanSB
+}
 // *****************************************************************************
 
 bool generate(int gen, unsigned int genseed, int gencards, int gentricks)
@@ -406,13 +358,17 @@ bool generate(int gen, unsigned int genseed, int gencards, int gentricks)
   // check arguments
   sprintf(szfile,"gen-%u-%d-%d-%d.txt",genseed,gen,gencards,gentricks);
   // if existing file, warn the user
-  if(access(szfile,F_OK) == 0)
-  { printf("\n*** WARNING: generate deals\n"
+
+  fp = fopen(szfile, "r");
+  if (fp)
+  { 
+    fclose(fp);
+    printf("\n*** WARNING: generate deals\n"
              "             the file '%s' is an existing file\n"
              "             and it may be overwritten\n"
              "do you want to continue? (y/n)):",szfile);
     fflush(stdout);
-    char buf[80], *pch;
+    char buf[255], *pch;
     pch = fgets(buf,255,stdin);
     if(pch == 0)
       return false;
@@ -439,8 +395,7 @@ bool generate(int gen, unsigned int genseed, int gencards, int gentricks)
 
   fp = fopen(szfile,"w");
   if(fp == 0)
-  { printf("*** error: %s: cannot open gen file %s for writing\n",
-           strerror(errno),szfile);
+  { printf("*** error: : cannot open gen file %s for writing\n", szfile);
     return false;
   }
 
@@ -476,11 +431,12 @@ bool generate(int gen, unsigned int genseed, int gencards, int gentricks)
       // get sorted trick positions
       for(itrick=0; itrick<gentricks; itrick++)
       { // get a random trick position
-        trickpos = (int)gib.pRNG->randomUint(nsettrick);
+        trickpos = static_cast<int>(gib.pRNG->randomUint
+	  (static_cast<unsigned>(nsettrick)));
         setpos[itrick] = settrick[trickpos];
         if(trickpos < nsettrick-1)
           memmove(settrick+trickpos,settrick+trickpos+1,
-                 (nsettrick-1-trickpos)*sizeof(int));
+                 static_cast<size_t>(nsettrick-1-trickpos)*sizeof(int));
         nsettrick--;
       }
 
@@ -494,8 +450,7 @@ bool generate(int gen, unsigned int genseed, int gencards, int gentricks)
         gib.Leader = leader;
         if(setDDS(&gib,&dl) == false)
           return false;
-        InitStart();
-        sbcode = SolveBoard(dl,target,sol,mode,&fut);
+        sbcode = SolveBoard(dl,target,sol,mode,&fut,0);
         if(testSBCode(sbcode) == false)
           return false;
         getSBScore(fut,&maxscore,bscore,m);
@@ -509,18 +464,18 @@ bool generate(int gen, unsigned int genseed, int gencards, int gentricks)
           score = ((gib.Leader & 1) ? score: gib.numCard()/4-score);
 
         timer.check();
-        nodes = (unsigned long long)fut.nodes;
+        nodes = static_cast<unsigned long long>(fut.nodes);
         totalnodes += nodes;
         elapsed = timer.dblDeltaElapsed();
 
-        printf("  deal=%d leader=%c %d%c nodes=%s elapsed=%0.2lf\n",
+        printf("  deal=%d leader=%c %d%c nodes=%s elapsed=%0.2f\n",
                ideal+1,chPLAYER[gib.Leader],score,(trumps==4)?'N':chSUIT[trumps],
                format64(nodes,sz1),elapsed);
 
         if(score < 10)
-          gib.szTricks[trickpos] = (score + '0');
+          gib.szTricks[trickpos] = static_cast<char>(score + '0');
         else
-          gib.szTricks[trickpos] = (score -10 + 'A');
+          gib.szTricks[trickpos] = static_cast<char>(score -10 + 'A');
       }
     }
 
@@ -535,7 +490,7 @@ bool generate(int gen, unsigned int genseed, int gencards, int gentricks)
 
   timer.check();
   totalelapsed = timer.dElapsed;
-  printf("deals=%d nodes=%s elapsed=%0.2lf\n"
+  printf("deals=%d nodes=%s elapsed=%0.2f\n"
          "output written to file %s\n",
          gen,format64(totalnodes,sz1),
          totalelapsed,szfile);
@@ -568,7 +523,7 @@ void getSBScore(const struct futureTricks &fut, int *pmaxscore,
         *pmaxscore = iscore;
       suit = fut.suit[alt];
       setBit(m[iscore][suit],14-fut.rank[alt]);
-      ushort malt = fut.equals[alt];
+      ushort malt = static_cast<ushort>(fut.equals[alt]);
       while(malt)
       { int c = leastSignificant1Bit(malt);
         clearBit(malt,c);
@@ -691,8 +646,7 @@ bool giblib(char *pszfile, int target, int sol, int mode, char *pszgiblib)
       if(setDDS(&gib,&dl) == false)
         return false;
 
-      InitStart();
-      sbcode = SolveBoard(dl,target,sol,mode,&fut);
+      sbcode = SolveBoard(dl,target,sol,mode,&fut,0);
       timer.check();
       if(testSBCode(sbcode) == false)
         return false;
@@ -707,7 +661,7 @@ bool giblib(char *pszfile, int target, int sol, int mode, char *pszgiblib)
       if(score >= 0)
         score = ((gib.Leader & 1) ? score: gib.numCard()/4-score);
 
-      nodes = (unsigned long long)fut.nodes;
+      nodes = static_cast<unsigned long long>(fut.nodes);
       dealnodes += nodes;
       totalnodes += nodes;
       elapsed = timer.dblDeltaElapsed();
@@ -715,7 +669,7 @@ bool giblib(char *pszfile, int target, int sol, int mode, char *pszgiblib)
       totalelapsed += elapsed;
 
       if(gib.szTricks[trickpos] != '-')
-      { printf("    deal=%d leader=%c %d%c score=%d nodes=%s elapsed=%0.2lf\n",
+      { printf("    deal=%d leader=%c %d%c score=%d nodes=%s elapsed=%0.2f\n",
                ideal,chPLAYER[gib.Leader],tricks,(trumps==4)?'N':chSUIT[trumps],
                score,format64(nodes,sz1),elapsed);
         bok = true;
@@ -730,21 +684,23 @@ bool giblib(char *pszfile, int target, int sol, int mode, char *pszgiblib)
         }
       }
       else
-      { printf("    deal=%d leader=%c %d%c nodes=%s elapsed=%0.2lf\n",
+      { printf("    deal=%d leader=%c %d%c nodes=%s elapsed=%0.2f\n",
                ideal,chPLAYER[gib.Leader],score,(trumps==4)?'N':chSUIT[trumps],
                format64(nodes,sz1),elapsed);
         bok = false;
       }
       if(bok == false)
       { if(score < 10)
-          gib.szTricks[trickpos] = (char)(score + (int)'0');
+          gib.szTricks[trickpos] = static_cast<char>
+	    (score + static_cast<int>('0'));
         else
-          gib.szTricks[trickpos] = (char)(score - 10 + (int)'A');
+          gib.szTricks[trickpos] = static_cast<char>
+	    (score - 10 + static_cast<int>('A'));
       }
       ntotal++;
     }
 
-    printf("  deal=%d nodes=%s elapsed=%0.2lf totalelapsed=%0.2lf\n"
+    printf("  deal=%d nodes=%s elapsed=%0.2f totalelapsed=%0.2f\n"
            "       ",
            ideal,format64(dealnodes,sz1),dealelapsed,totalelapsed);
     if(strlen(gib.pszName))
@@ -753,10 +709,13 @@ bool giblib(char *pszfile, int target, int sol, int mode, char *pszgiblib)
            gib.szTricks,gib.numCard()/4);
   }
 
-  printf("deals=%s nodes=%s avg=%s elapsed=%0.2lf avg=%.02lf\n",
+  printf("deals=%s nodes=%s avg=%s elapsed=%0.2f avg=%.02f\n",
          pszgiblib,format64(totalnodes,sz1),
-         ntotal?format64(totalnodes/ntotal,sz2):format64(totalnodes,sz2),
-         totalelapsed,ntotal?totalelapsed/(double)ntotal:totalelapsed);
+         ntotal ? format64(totalnodes/static_cast<unsigned>(ntotal),sz2) :
+	   format64(totalnodes,sz2),
+         totalelapsed,
+	 ntotal ? totalelapsed / static_cast<double>(ntotal) :
+	   static_cast<double>(totalelapsed));
   if(nerror)
     printf("*** ERROR: nerror=%d, tricks and score different\n",nerror);
   printf("\n");
@@ -774,14 +733,16 @@ FILE *openFile(char *pszfile)
   { printf("*** error: no 'giblib' file specified\n");
     return 0;
   }
-  if(access(pszfile,F_OK) != 0)
+
+  /*if(access(pszfile,F_OK) != 0)
   { printf("*** error: non-existing file %s\n",pszfile);
     return 0;
   }
+  */ 
+
   FILE *fp = fopen(pszfile,"r");
   if(fp == 0)
-  { printf("*** error: %s: cannot open file %s for reading\n",
-           strerror(errno),pszfile);
+  { printf("*** : cannot open file %s for reading\n", pszfile);
     return 0;
   }
 
@@ -790,16 +751,16 @@ FILE *openFile(char *pszfile)
 } // openFile
 // *****************************************************************************
 
-void playDD(cGIBLib *pgib, int target, int sol, int trumps, int leader)
+void playDD(cGIBLib *pgib, int target, int sol)
 {
   cTimer timer;
   double elapsed=0;
   struct deal dl;
   struct futureTricks fut;
   int sbcode, suit, card, ntotalcard;
-  char *pch, *pchend, buf[80];
+  char *pch, *pchend, buf[255];
   bool bhelp=false, bcompute=true;
-  char *szplayer[4] = {"west","north","east","south"};
+  char szplayer[4][6] = {"west","north","east","south"};
 
   printf("\n");
   pgib->print();
@@ -822,8 +783,7 @@ void playDD(cGIBLib *pgib, int target, int sol, int trumps, int leader)
           return;
   
         timer.check();
-        InitStart();
-        sbcode = SolveBoard(dl,target,sol,1,&fut);
+        sbcode = SolveBoard(dl,target,sol,1,&fut,0);
         timer.check();
         if(testSBCode(sbcode) == false)
           exit(-1);
@@ -886,7 +846,7 @@ void playDD(cGIBLib *pgib, int target, int sol, int trumps, int leader)
       else
         continue;
       pch++;
-      card = (int)cGIBLib::getCard(pch[0]);
+      card = static_cast<int>(cGIBLib::getCard(pch[0]));
       if(card == eCARD_NONE)
         continue;
 
@@ -911,8 +871,8 @@ void printSBScore(int target, int solutions, struct futureTricks *pfut,
   ushort m[14][4];
      int maxscore;
 
-  printf("-- sb completed: nodes=%s tgt=%d sol=%d alt=%d elapsed=%0.2lf\n",
-         format(pfut->nodes,sz1),target,solutions,pfut->cards,elapsed);
+  printf("-- sb completed: nodes=%s tgt=%d sol=%d alt=%d elapsed=%0.2f\n",
+         format(static_cast<unsigned>(pfut->nodes),sz1),target,solutions,pfut->cards,elapsed);
   getSBScore(*pfut,&maxscore,bscore,m);
   printSBScore(bscore,m);
 
@@ -984,7 +944,7 @@ bool setDDS(cGIBLib *pgib, struct deal *pdl)
         clearBit(mp,card);
         setBit(m,CARD2DDS(card));
       }
-      pdl->remainCards[ddspl][suit] = (unsigned int)m;
+      pdl->remainCards[ddspl][suit] = static_cast<unsigned int>(m);
     }
   }
 
@@ -997,13 +957,11 @@ bool testSBCode(int sbcode)
 {
   // test DDS return code after SolveBoard(..) has been run
 
-  if(sbcode < SBSTATUS_MIN)
-     sbcode = SBSTATUS_MIN;
-  else if(sbcode >= SBSTATUS_MIN+SBSTATUS_NUM)
-     sbcode = SBSTATUS_MIN + SBSTATUS_NUM - 1;
-  sbcode -= SBSTATUS_MIN;
-  if(sbcode != SBSTATUS_NOFAULT)
-  { printf("*** error: %s\n",szSBStatus[0].szCode);
+  if (sbcode != RETURN_NO_FAULT)
+  {
+    char line[80];
+    ErrorMessage(sbcode, line);
+    printf("*** error: %s\n", line);
     return false;
   }
 
@@ -1073,16 +1031,15 @@ bool timeAll(char *pszfile, int trumps, int leader)
         return false;
 
       timer.start();
-      InitStart();
-      sbcode = SolveBoard(dl,target,sol,mode,&fut);
+      sbcode = SolveBoard(dl,target,sol,mode,&fut,0);
       timer.check();
       if(testSBCode(sbcode) == false)
         return false;
       printSBScore(target,sol,&fut,timer.dblElapsed());
 
       if(ndeal >= ndealalloc)
-      { presult = (struct sResult*)realloc(presult,
-                                      (ndealalloc+25)*sizeof(struct sResult));
+      { presult = static_cast<sResult*>
+        (realloc(presult, (static_cast<size_t>(ndealalloc)+25)*sizeof(sResult)));
         if(presult == 0)
         { printf("*** error: cannot allocate result array\n");
           return false;
@@ -1098,8 +1055,8 @@ bool timeAll(char *pszfile, int trumps, int leader)
       if(nresult < ndeal)
         nresult = ndeal;
 
-      totalnodes += (unsigned long long)fut.nodes;
-      nodes[sol-1] += (unsigned long long)fut.nodes;
+      totalnodes += static_cast<unsigned long long>(fut.nodes);
+      nodes[sol-1] += static_cast<unsigned long long>(fut.nodes);
       totalelapsed += timer.dblElapsed();
       elapsed[sol-1] += timer.dblElapsed();
     }
@@ -1114,18 +1071,18 @@ bool timeAll(char *pszfile, int trumps, int leader)
   { char szline[128], sz1[32], sz2[32];
     int len, pos;
     memset(szline,' ',127);
-    len = strlen(presult[ideal].szName);
+    len = static_cast<int>(strlen(presult[ideal].szName));
     if(len)
-      strncpy(szline,presult[ideal].szName,len);
+      strncpy(szline, presult[ideal].szName, static_cast<size_t>(len));
     pos = LEN_RESULTNAME + 1;
     for(sol=0; sol<3; sol++)
-    { format(presult[ideal].nNode[sol],sz1);
-      sprintf(sz2,"%0.2lf",presult[ideal].Elapsed[sol]);
-      len = strlen(sz1);
-      strncpy(szline+pos+12-len,sz1,len);
+    { format( static_cast<unsigned>(presult[ideal].nNode[sol]),sz1);
+      sprintf(sz2,"%0.2f",presult[ideal].Elapsed[sol]);
+      len = static_cast<int>(strlen(sz1));
+      strncpy(szline+pos+12-len,sz1, static_cast<size_t>(len));
       pos += 13;
-      len = strlen(sz2);
-      strncpy(szline+pos+5-len,sz2,len);
+      len = static_cast<int>(strlen(sz2));
+      strncpy(szline+pos+5-len,sz2, static_cast<size_t>(len));
       pos += 8;
     }
     szline[pos] = '\0';
@@ -1137,7 +1094,7 @@ bool timeAll(char *pszfile, int trumps, int leader)
            format64(totalnodes,sz1),format64(nodes[0],sz2),
            format64(nodes[1],sz3),format64(nodes[2],sz4));
   }
-  printf("elapsed: total=%0.2lf  sol-1=%0.2lf  sol-2=%0.2lf  sol-3=%0.2lf\n",
+  printf("elapsed: total=%0.2f  sol-1=%0.2f  sol-2=%0.2f  sol-3=%0.2f\n",
          totalelapsed,elapsed[0],elapsed[1],elapsed[2]);
 
   return true;
@@ -1184,10 +1141,10 @@ bool timeg(char *pszfile, int target, int sol, int mode,
   { printf("*** error: timeg optionX=%c more than 13 tricks\n",optx);
     return false;
   }
-  optx = tolower(optx);
-  tricks = ((int)optx - (int)'0');
+  optx = static_cast<char>(tolower(optx));
+  tricks = (static_cast<int>(optx) - static_cast<int>('0'));
   if((tricks < 0) || (tricks > 9))
-    tricks = ((int)optx - (int)'a' + 10);
+    tricks = static_cast<int>(optx - static_cast<int>('a') + 10);
 
        if(pszxcn[1] == 's') contract = 0;
   else if(pszxcn[1] == 'h') contract = 1;
@@ -1247,8 +1204,7 @@ bool timeg(char *pszfile, int target, int sol, int mode,
     if(setDDS(&gib,&dl) == false)
       return false;
 
-    InitStart();
-    sbcode = SolveBoard(dl,target,sol,mode,&fut);
+    sbcode = SolveBoard(dl,target,sol,mode,&fut,0);
     timer.check();
     if(testSBCode(sbcode) == false)
       return false;
@@ -1273,15 +1229,16 @@ bool timeg(char *pszfile, int target, int sol, int mode,
 
     if(!bverbose)
       printf("\r");
-    printf("  deal=%d ndeal=%d nodes=%s elapsed=%0.2lf",
-           currentdeal,ideal,format64(fut.nodes,sz1),timer.deltaElapsed);
+    printf("  deal=%d ndeal=%d nodes=%s elapsed=%0.2f",
+           currentdeal,ideal,format64(static_cast<uint64>(fut.nodes),sz1),
+	     timer.deltaElapsed);
     if(!bverbose)
       printf("                    ");
     else
       printf("\n");
     fflush(stdout);
 
-    nodes += (unsigned long long)fut.nodes;
+    nodes += static_cast<unsigned long long>(fut.nodes);
     elapsed += timer.dblDeltaElapsed();
 
     if(minnode > fut.nodes)
@@ -1300,13 +1257,17 @@ bool timeg(char *pszfile, int target, int sol, int mode,
   if(ideal <= 0)
     printf("no deals found\n");
   else
-  { printf("\rdeals=%d nodes=%s elapsed=%0.2lf                              \n",
+  { printf("\rdeals=%d nodes=%s elapsed=%0.2f                              \n",
            ndeal,format64(nodes,sz1),elapsed);
     printf("min_node=%s max_node=%s avg=%s\n",
-           format(minnode,sz1),format(maxnode,sz2),
-           format((ideal>0)?nodes/ideal:nodes,sz3));
-    printf("min_elapsed=%0.2lf max_elapsed=%0.2lf avg=%0.2lf\n",
-           minelapsed,maxelapsed,(elapsed>0.0)?elapsed/(double)ideal:elapsed);
+           format(static_cast<unsigned>(minnode),sz1),
+	   format(static_cast<unsigned>(maxnode),sz2),
+           format(static_cast<unsigned long long>
+	     ( ideal > 0 ? static_cast<unsigned>(nodes)/ static_cast<unsigned>(ideal) : static_cast<unsigned>(nodes)), 
+	     sz3));
+    printf("min_elapsed=%0.2f max_elapsed=%0.2f avg=%0.2f\n",
+           minelapsed,maxelapsed,(elapsed>0.0)?elapsed/
+	     static_cast<double>(ideal) :elapsed);
   }
   if(nerror)
     printf("*** ERROR: nerror=%d, incorrect maximum tricks\n",nerror);
@@ -1370,8 +1331,7 @@ bool tricks(cGIBLib *pgib, int ideal, int target, int sol, int mode)
     if(setDDS(pgib,&dl) == false)
       return false;
 
-    InitStart();
-    sbcode = SolveBoard(dl,target,sol,mode,&fut);
+    sbcode = SolveBoard(dl,target,sol,mode,&fut,0);
     timer.check();
     if(testSBCode(sbcode) == false)
       return false;
@@ -1386,23 +1346,25 @@ bool tricks(cGIBLib *pgib, int ideal, int target, int sol, int mode)
     if(score >= 0)
       score = ((pgib->Leader & 1) ? score: pgib->numCard()/4-score);
 
-    nodes = (unsigned long long)fut.nodes;
+    nodes = static_cast<unsigned long long>(fut.nodes);
     dealnodes += nodes;
     totalnodes += nodes;
     elapsed = timer.dblDeltaElapsed();
     dealelapsed += elapsed;
     totalelapsed += elapsed;
 
-    printf("  leader=%c %d%c nodes=%s elapsed=%0.2lf\n",
+    printf("  leader=%c %d%c nodes=%s elapsed=%0.2f\n",
            chPLAYER[pgib->Leader],score,(trumps==4)?'N':chSUIT[trumps],
            format64(nodes,sz1),elapsed);
 
     if(score < 10)
-      pgib->szTricks[trickpos] = (char)(score + (int)'0');
+      pgib->szTricks[trickpos] = static_cast<char>
+        (score + static_cast<int>('0'));
     else
-      pgib->szTricks[trickpos] = (char)(score - 10 + (int)'A');
+      pgib->szTricks[trickpos] = static_cast<char>
+        (score - 10 + static_cast<int>('A'));
   }
-  printf("nodes=%s elapsed=%0.2lf totalelapsed=%0.2lf\n",
+  printf("nodes=%s elapsed=%0.2f totalelapsed=%0.2f\n",
          format64(dealnodes,sz1),dealelapsed,totalelapsed);
 
   printf("\n");

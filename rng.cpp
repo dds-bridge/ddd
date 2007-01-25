@@ -27,13 +27,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <math.h>
 
+#include "portab.h"
 #include "rng.h"
 
 const char *pszRNGGen[eRNG_COUNT]
@@ -47,7 +43,17 @@ const char *pszRNGGen[eRNG_COUNT]
 const char *pszRNGGenList = "qd1/mt/mthr/well";
 const char *pszRNGGenDefault = "mt";
 
-double dRAN_SCALE = 1.0 / (1.0+double((unsigned int)(0xFFFFFFFF)));
+double dRAN_SCALE = 1.0 / (1.0+double(static_cast<unsigned int>(0xFFFFFFFF)));
+
+unsigned int qd1(unsigned int *puseed);
+void reset1Bit(unsigned int u1bit, unsigned int *pu);
+unsigned int count1Bits(unsigned int useed);
+unsigned int qd1Uint(unsigned int *puseed, unsigned int urange);
+unsigned int equiDistribute1Bits(unsigned int u, unsigned int *puseed);
+void set0Bit(unsigned int u0bit, unsigned int *pu);
+double gammln(float xx);
+void gcf(double *gammcf, double aa, double x, double *gln);
+void gser(double *gamser, double aa, double x, double *gln);
 
 // *****************************************************************************
 // cRNG
@@ -55,7 +61,8 @@ double dRAN_SCALE = 1.0 / (1.0+double((unsigned int)(0xFFFFFFFF)));
 
 unsigned int cRNG::randomUint(unsigned int urange)
 {
-  return (unsigned int)((double)urange * (double)random() * dRAN_SCALE);
+  return static_cast<unsigned int>(static_cast<double>(urange) * 
+    static_cast<double>(random()) * dRAN_SCALE);
 
 } // cRNG::randomUint
 // *****************************************************************************
@@ -65,7 +72,7 @@ cRNG *cRNG::createRNG(eRNG erng, unsigned int useed)
   cRNG *prng;
   int rng;
 
-  rng = (int)erng;
+  rng = static_cast<int>(erng);
   if(rng == eRNG_QD1)
     prng = new cRNG_QD1(useed);
   else if(rng == eRNG_MTHR)
@@ -110,7 +117,8 @@ void cRNG_QD1::set(unsigned int useed)
 
 unsigned int cRNG_QD1::random()
 {
-  uSeed = ((unsigned int)(1664525L) * uSeed + (unsigned int)(1013904223L));
+  uSeed = (static_cast<unsigned int>(1664525L) * uSeed + 
+    static_cast<unsigned int>(1013904223L));
   return uSeed;
 
 } // cRNG_QD1::random
@@ -120,15 +128,18 @@ unsigned int cRNG_QD1::random()
 
 unsigned int qd1(unsigned int *puseed)
 {
-  *puseed = ((unsigned int)(1664525L) * (*puseed) + (unsigned int)(1013904223L));
+  *puseed = (static_cast<unsigned int>(1664525L) * (*puseed) + 
+    static_cast<unsigned int>(1013904223L));
   return *puseed;
 
 } // qd1
 
 unsigned int qd1Uint(unsigned int *puseed, unsigned int urange)
 {
-  *puseed = ((unsigned int)(1664525L) * (*puseed) + (unsigned int)(1013904223L));
-  return (unsigned int)((double)urange * (double)(*puseed) * dRAN_SCALE);
+  *puseed = (static_cast<unsigned int>(1664525L) * (*puseed) + 
+    static_cast<unsigned int>(1013904223L));
+  return static_cast<unsigned int>(static_cast<double>(urange) * 
+    static_cast<double>(*puseed) * dRAN_SCALE);
 
 } // qd1Uint
 
@@ -311,23 +322,23 @@ void cRNG_Mother::set(unsigned int useed)
   smthr[2] = 1492;
   smthr[3] = 2111111111;
 
-  xm1    = (uint64)smthr[0];
-  xm2    = (uint64)smthr[1];
-  xm3    = (uint64)smthr[2];
-  xm4    = (uint64)smthr[3];
+  xm1    = static_cast<uint64>(smthr[0]);
+  xm2    = static_cast<uint64>(smthr[1]);
+  xm3    = static_cast<uint64>(smthr[2]);
+  xm4    = static_cast<uint64>(smthr[3]);
 
-  unsigned int sum = xm1 + xm2 + xm3 + xm4;
+  unsigned int sum = static_cast<unsigned>(xm1 + xm2 + xm3 + xm4);
   cRNG_WELL rng(uSeed);
-  mcarry = (uint64)rng.randomUint(sum);
+  mcarry = static_cast<uint64>(rng.randomUint(sum));
 
 } // cRNG_Mother::set
 
 unsigned int cRNG_Mother::random()
 {
-  static uint64 am1 = (uint64)2111111111;
-  static uint64 am2 = (uint64)1492;
-  static uint64 am3 = (uint64)1776;
-  static uint64 am4 = (uint64)5115;
+  static uint64 am1 = static_cast<uint64>(2111111111);
+  static uint64 am2 = static_cast<uint64>(1492);
+  static uint64 am3 = static_cast<uint64>(1776);
+  static uint64 am4 = static_cast<uint64>(5115);
 
   uint64 x = am1 * xm1
            + am2 * xm2
@@ -341,7 +352,7 @@ unsigned int cRNG_Mother::random()
   xm4    = (x & 0x00000000ffffffffULL);
   mcarry = (x >> 32);
 
-  return (unsigned int)xm4;
+  return static_cast<unsigned int>(xm4);
 
 } // cRNG_Mother::random
 // *****************************************************************************
@@ -391,20 +402,20 @@ void cRNG_MT19937::initByArray(unsigned int lenkey, unsigned int key[])
   initBySeed(19650218UL);
 
   i=1; j=0;
-  k = (N>lenkey ? N : lenkey);
+  k = (N>lenkey ? N : static_cast<int>(lenkey));
   for (; k; k--)
   {
     U[i] = (U[i] ^ ((U[i-1] ^ (U[i-1] >> 30)) * 1664525UL))
-      + key[j] + j; /* non linear */
+      + key[j] + static_cast<unsigned>(j); /* non linear */
     U[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
     i++; j++;
     if (i>=N) { U[0] = U[N-1]; i=1; }
-    if (j>=(int)lenkey) j=0;
+    if (j>=static_cast<int>(lenkey)) j=0;
   }
   for (k=N-1; k; k--)
   {
     U[i] = (U[i] ^ ((U[i-1] ^ (U[i-1] >> 30)) * 1566083941UL))
-      - i; /* non linear */
+      - static_cast<unsigned>(i); /* non linear */
     U[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
     i++;
     if (i>=N) { U[0] = U[N-1]; i=1; }
@@ -541,7 +552,7 @@ void initEnt(bool binmode)
   sccfirst = true;             /* Mark first time for serial correlation */
   scct1 = scct2 = scct3 = 0.0; /* Clear serial correlation terms */
 
-  incirc = pow(pow(256.0, (double) (MONTEN / 2)) - 1, 2.0);
+  incirc = pow(pow(256.0, static_cast<double> (MONTEN / 2)) - 1, 2.0);
 
   for (i = 0; i < 256; i++)
     ccount[i] = 0;
@@ -571,7 +582,7 @@ void addEnt(unsigned char *buf, int buflen)
 
       if (bean == 0)
       {
-        monte[mp++] = oc;       /* Save character for Monte Carlo */
+        monte[mp++] = static_cast<unsigned>(oc);       /* Save character for Monte Carlo */
         if (mp >= MONTEN)
         {  /* Calculate every MONTEN character */
           int mj;
@@ -627,10 +638,10 @@ void endEnt(double *r_ent, double *r_chisq, double *r_mean,
 
   cexp = totalc / (binary ? 2.0 : 256.0);  /* Expected count per bin */
   for (i = 0; i < (binary ? 2 : 256); i++)
-  { prob[i] = (double) ccount[i] / totalc;
+  { prob[i] = static_cast<double>(ccount[i]) / totalc;
     a = ccount[i] - cexp;
     chisq = chisq + (a * a) / cexp;
-    datasum += ((double) i) * ccount[i];
+    datasum += (static_cast<double>(i)) * ccount[i];
   }
 
   /* Calculate entropy */
@@ -644,7 +655,7 @@ void endEnt(double *r_ent, double *r_chisq, double *r_mean,
      within the circle
   */
 
-  montepi = 4.0 * (((double) inmont) / mcount);
+  montepi = 4.0 * ((static_cast<double>(inmont)) / mcount);
 
   /* Return results through arguments */
 
@@ -675,6 +686,7 @@ void prtEnt(double r_chisq, double r_mean,
 } // prtEnt
 // *****************************************************************************
 
+
 double gammln(float xx)
 {
   double x, y, tmp, ser;
@@ -702,18 +714,19 @@ double gammln(float xx)
 #define EPS 3.0e-7
 #define FPMIN 1.0e-30
 
-void gcf(double *gammcf, double a, double x, double *gln)
+
+void gcf(double *gammcf, double aa, double x, double *gln)
 {
   int i;
   double an, b, c, d, del, h;
 
-  *gln=gammln(a);
-  b=x+1.0-a;
+  *gln=gammln(static_cast<float>(aa));
+  b=x+1.0-aa;
   c=1.0/FPMIN;
   d=1.0/b;
   h=d;
   for (i=1;i<=ITMAX;i++)
-  { an = -i*(i-a);
+  { an = -i*(i-aa);
     b += 2.0;
     d=an*d+b;
     if (fabs(d) < FPMIN)
@@ -728,10 +741,10 @@ void gcf(double *gammcf, double a, double x, double *gln)
       break;
   }
   if (i > ITMAX)
-  { printf("*** error %s: a too large, ITMAX too small\n",__func__);
+  { printf("*** error %s: a too large, ITMAX too small\n","gcf");
     exit(1);
   }
-  *gammcf=exp(-x+a*log(x)-(*gln))*h;
+  *gammcf=exp(-x+aa*log(x)-(*gln))*h;
 
 } // gcf
 
@@ -742,16 +755,17 @@ void gcf(double *gammcf, double a, double x, double *gln)
 #define ITMAX 100
 #define EPS 3.0e-7
 
-void gser(double *gamser, double a, double x, double *gln)
+
+void gser(double *gamser, double aa, double x, double *gln)
 {
   int n;
   double sum,del,ap;
 
-  *gln=gammln(a);
+  *gln=gammln(static_cast<float>(aa));
   if (x <= 0.0)
   {
     if (x < 0.0)
-    { printf("*** error %s: x less than 0\n",__func__);
+    { printf("*** error %s: x less than 0\n","gser");
       exit(1);
     }
     *gamser=0.0;
@@ -759,18 +773,18 @@ void gser(double *gamser, double a, double x, double *gln)
   }
   else
   {
-    ap=a;
-    del=sum=1.0/a;
+    ap=aa;
+    del=sum=1.0/aa;
     for (n=1;n<=ITMAX;n++)
     { ++ap;
       del *= x/ap;
       sum += del;
       if (fabs(del) < fabs(sum)*EPS)
-      { *gamser=sum*exp(-x+a*log(x)-(*gln));
+      { *gamser=sum*exp(-x+aa*log(x)-(*gln));
         return;
       }
     }
-    printf("*** error %s: a too large, ITMAX too small\n",__func__);
+    printf("*** error %s: a too large, ITMAX too small\n","gser");
     exit(1);
   }
 
@@ -780,21 +794,21 @@ void gser(double *gamser, double a, double x, double *gln)
 #undef EPS
 // *****************************************************************************
 
-double gammq(double a, double x)
+double gammq(double aa, double x)
 {
   double gamser, gammcf, gln;
 
   if (x < 0.0 || a <= 0.0)
-  { printf("*** error %s: invalid arguments\n",__func__);
+  { printf("*** error %s: invalid arguments\n","gammq");
     exit(1);
   }
-  if (x < (a+1.0))
-  { gser(&gamser,a,x,&gln);
+  if (x < (aa+1.0))
+  { gser(&gamser,aa,x,&gln);
     return 1.0-gamser;
   }
   else
   {
-    gcf(&gammcf,a,x,&gln);
+    gcf(&gammcf,aa,x,&gln);
     return gammcf;
   }
 
