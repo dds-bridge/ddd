@@ -1,0 +1,37 @@
+{name=cpt-47
+  The following deal is from page 47 of 'Card Play Technique' by Norman Squire.
+  The play and analysis given there agrees completely with DDA.
+
+  Bidding:     W  N   E   S
+               -  -   1C  dbl
+               no 2H  etc
+  Lead W: C8
+  South reaches 3NT after East opened with 1C. Dummy plays C9, east CT
+  and south wins with CK. South enters dummy with HK to lead a diamond,
+  east playing low, the DK winning. South plays another heart to the ace,
+  intending to play another diamond to establish the suit, but on this
+  east discards the DA. All south can do is take the spade finesse and
+  cash his tricks, going down one.
+  If east does not play DA, south makes 4NT.
+  Note that 4NT by north cannot be beaten.
+}
+j95.t8632.j65.85 t862.ak54.73.q92 k743.j.a98.ajt76 aq.q97.kqt42.k43
+
+{name=cpt-47-3t played=c8.c9.ct.ck-h7.h2.hk.hj-d3.d8.dk.d5
+ first 3 tricks only
+}
+j95.t8632.j65.85 t862.ak54.73.q92 k743.j.a98.ajt76 aq.q97.kqt42.k43
+
+{name=cpt-47-3t+3c played=c8.c9.ct.ck-h7.h2.hk.hj-d3.d8.dk.d5-h9.h3.ha
+ south is in 3NT,
+ this is the position after the first 3 tricks and 3 cards of 4-th trick,
+ the killer play by east is to discard ace of diamonds,
+ anything else gives south at least 10 tricks
+}
+j95.t8632.j65.85 t862.ak54.73.q92 k743.j.a98.ajt76 aq.q97.kqt42.k43
+
+{name=cpt-47-le leader=e
+ declarer north
+}
+j95.t8632.j65.85 t862.ak54.73.q92 k743.j.a98.ajt76 aq.q97.kqt42.k43
+

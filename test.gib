@@ -1,0 +1,136 @@
+{name=gib2
+   tricks: 1111 1111 1111 1111 1111 (max=2)
+}
+k9... jt... q...a a8...:--------------------
+
+{name=gib3 trumps=d
+   tricks: 2122 2121 2122 2222 1111 (max=3)
+}
+k9..2. jt...q q...a8 a8..3.
+
+{name=gib4 trumps=d
+  tricks: 2222 2121 2222 2222 2221 (max=4)
+}
+k9..2.9 jt...q6 q...a85 a8..3.7
+
+{name=gib5 trumps=d
+  tricks: 3333 3232 3333 3222 2221 (max=5)
+}
+k97..2.9 jt5...q6 q...a854 a86..3.7
+
+{name=gib10 trumps=s
+  tricks: 7575 8777 8888 5555 8888 (max=10)
+}
+q98.2.qjt98.8 kj5.akq3..j65 t76.jt98.3.kt a42.7654.5.a2:-------8------------
+
+{name=gin trumps=n
+  tricks: 9998 9898 9999 6666 7777 (max=13)
+}
+T6.T92.T.AJT9532 KQ9.AQJ.96432.86 8732.753.AKQJ85. AJ54.K864.7.KQ74
+
+{name=dbldum1 trumps=n
+  tricks: 5454 3333 4343 5554 4444 (max=6)
+  south can make 4/6 with W on lead
+   1 tricks: DT
+   2 tricks: CT HT S23T
+}
+T32.t.t.t aj4..q8.2 kq.98.a2. .a2.k97.a
+
+{name=dbldum2 trumps=h
+  James Allen's trump coup and triple squeeze
+  tricks: CCCC AAAA CCDC 99A9 A9A9 (max=13)
+  south can make 12/13 with W on lead
+   0 tricks: CK S89TJQ
+   1 tricks: C2T D9TJQ H4
+}
+qjt98.4.qjt9.kt2 AK76543.32.AK2.3 2.qt87.876.87654 .akj965.543.aqj9
+
+{name=devil1 trumps=n
+  tricks: A9A9 A9A9 7777 AAAA 9999 (max=13)
+  south can make 9/13 with W on lead
+   2 tricks: DK
+   3 tricks: CJA D9T S56
+   4 tricks: H678TJQ
+}
+65.QJT876.KT9.AJ AK83.AK.A65432.K JT92.54.Q.765432 Q74.932.J87.QT98
+
+{name=callahan trumps=h
+  http://users.bigpond.net.au/callahan/book1.html
+  I came across this problem in an old, yellowed, newspaper clipping.
+  Unfortunately no solution was included. It was promised "next week".
+  It was introduced with:
+    Bridge magazine in Britain has presented a double dummy problem, which is
+    unquestionably the best ever devised. Don't despair if you cant work it out
+    because it has defied some of the world's best players.
+  West leads the 10 of trumps against 4 hearts. South to make 10 tricks.
+  I am not one of the world's best players, but so far it has defied me too.
+
+  tricks: 9999 8787 9999 6666 5555 (max=13)
+  south can make 9/13 with W on lead
+   2 tricks: SJQA
+   3 tricks: S5
+   4 tricks: C6789 D59 H89T
+}
+AQJ5.T98.95.9876 8763.2.AQ32.AT54 T9.76.KT876.KQ32 K42.AKQJ543.J4.J
+
+{name=g410-scc trumps=s
+  Goren on Play and Defense, p410 scissors coup
+  tricks: 6666 9898 7676 5555 7676 (max=13)
+  south can make 8/13 with W on lead
+   3 tricks: SQ
+   4 tricks: D89TKA H36T S4A
+   5 tricks: C78
+}
+aq4.t63.akt98.87 j852.aq8.754.kq4 6.9754.qj2.t9652 kt973.kj2.63.aj3
+
+{name=giblibno1 trumps=c
+  tricks: 3353 6666 3333 4343 4454 (max=13)
+  south can make 4/13 with W on lead
+   8 tricks: CA H248 S67
+   9 tricks: C29J D25Q HA
+}
+76.A842.Q52.AJ92 K98.Q953.T87.765 AJ5.KT76.KJ63.T4 QT432.J.A94.KQ83
+
+{name=giblibno2 trumps=c
+  tricks: 5555 6666 3232 3333 4444 (max=13)
+  south can make 4/13 with W on lead
+   9 tricks: C47QKA D35QA H8 S2JA
+}
+AJ2.8.AQ53.AKQ74 Q98743.AK.K86.95 K6.QJ6543.972.32 T5.T972.JT4.JT86
+
+{name=bo17 trumps=c
+  tricks: 6666 7777 5555 7787 7777 (max=13)
+  south can make 7/13 with W on lead
+   5 tricks: D36Q
+   6 tricks: C38A H25JK S78A
+}
+A87.KJ52.Q63.A83 T42.T863.A84.762 953.AQ94.T92.QJ4 KQJ6.7.KJ75.KT95
+
+{name=bo21 trumps=c
+  tricks: 9797 8787 6666 A9A9 9998 (max=13)
+  south can make 8/13 with W on lead
+   4 tricks: C37 D248 H348Q S36Q
+   5 tricks: HT
+}
+Q63.QT843.842.73 7.AJ76.KQ763.K94 AK42.K52.A9.J652 JT985.9.JT5.AQT8
+
+{name=giblib1}
+JT852.93.KQ7.J82 AQ97.JT654.T6.A5 43.AK8.A542.7643 K6.Q72.J983.KQT9:88887777A9A977778888
+{name=giblib2}
+765.T87.Q953.K98 T4.KJ63.KT76.AJ5 KQ83.A94.J.QT432 AJ92.Q52.A842.76:AAA89998A9A9AAAA7777
+{name=giblib3}
+32.972.QJ6543.K6 95.K86.AK.Q98743 JT86.JT4.T972.T5 AKQ74.AQ53.8.AJ2:CCCCBBCBCCCC8888CCCC
+{name=giblib4}
+A743.JT72.Q64.QJ J5.Q63.T985.K986 62.K984.J2.T7542 KQT98.A5.AK73.A3:AAA9AAA97777BBBA8888
+{name=giblib5}
+KQ97.63.T84.KT84 A543.AQ7.Q5.A752 J82.JT854.K92.Q3 T6.K92.AJ763.J96:99997777989899999898
+{name=giblib6}
+QJ742.A2.QT8.Q82 AT5.63.J7632.A73 K9.KJ84.K54.J964 863.QT975.A9.KT5:55555454667666665555
+{name=giblib7}
+8754.QJ752.QJ83. JT.T98.AT9762.62 AKQ962.A3.5.KQT3 3.K64.K4.AJ98754:44442222333377778787
+{name=giblib8}
+82.AK764.A4.9432 A964.JT82.K3.AK8 QJ7.93.QT9875.J6 KT53.Q5.J62.QT75:99999999999966669999
+{name=giblib9}
+T5.32.KJ42.AKJ52 KJ6.65.A85.QT743 A98432.AK74.93.8 Q7.QJT98.QT76.96:65653333656566665555
+{name=giblib10}
+AK9.KQ854.QT6.74 Q83.J9.AK42.KJ63 742.T7632.J3.T85 JT65.A.9875.AQ92:878799996565AAAAAAAA
