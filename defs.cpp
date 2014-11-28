@@ -27,7 +27,7 @@
 #include <ctype.h>
 
 #include "defs.h"
-#include "portab.h"
+#include "dds/include/portab.h"
 
 const char *szPLAYER[4]   = {"west", "north", "east", "south"};
 const char  chPLAYER[4]   = {'W', 'N', 'E', 'S'};

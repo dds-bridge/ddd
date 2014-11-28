@@ -31,8 +31,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include "../include/dll.h"
-#include "portab.h"
 
 // -----------------------------------------------------------------------------
 
@@ -55,7 +53,8 @@
 //
 // -----------------------------------------------------------------------------
 
-#include "../include/dll.h"
+#include "dds/include/dll.h"
+#include "dds/include/portab.h"
 #include "giblib.h"
 #include "timer.h"
 

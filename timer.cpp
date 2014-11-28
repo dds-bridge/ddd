@@ -32,7 +32,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "portab.h"
+#include "dds/include/portab.h"
 #include "timer.h"
 
 // *****************************************************************************
