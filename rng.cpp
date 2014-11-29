@@ -29,7 +29,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "dds/include/portab.h"
+#include "portab_DDD.h"
 #include "rng.h"
 
 const char *pszRNGGen[eRNG_COUNT]

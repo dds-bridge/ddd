@@ -32,7 +32,7 @@ CC_FULL_FLAGS	= $(CC_FLAGS) $(WARN_FLAGS)
 
 DTEST		= ddd
 
-DLLBASE		= ../lib/dds
+DLLBASE		= dds
 DLL 		= $(DLLBASE).dll
 DLIB 		= $(DLLBASE).lib
 EXPORTER	= Exports.def
@@ -58,14 +58,14 @@ depend:
 	makedepend -Y -o.obj -- $(TEST_SOURCE_FILES) $(DTEST).cpp
 
 clean:
-	rm -f $(TEST_OBJ_FILES) $(DTEST).{obj,exe} 
+	rm -f $(TEST_OBJ_FILES) $(DTEST).{obj,exe} $(DLL) $(DLIB)
 
 
 # DO NOT DELETE
 
-ddd.obj: portab.h ../include/dll.h giblib.h defs.h rng.h timer.h
-defs.obj: defs.h
+ddd.obj: dds/include/dll.h portab_DDD.h giblib.h defs.h rng.h timer.h
+defs.obj: defs.h portab_DDD.h
 giblib.obj: giblib.h defs.h rng.h
-rng.obj: portab.h rng.h
-timer.obj: timer.h
-ddd.obj: portab.h ../include/dll.h giblib.h defs.h rng.h timer.h
+rng.obj: portab_DDD.h rng.h
+timer.obj: portab_DDD.h timer.h
+ddd.obj: dds/include/dll.h portab_DDD.h giblib.h defs.h rng.h timer.h

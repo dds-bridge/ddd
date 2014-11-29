@@ -30,9 +30,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include <sys/time.h>
 
-#include "dds/include/portab.h"
+#include "portab_DDD.h"
 #include "timer.h"
 
 // *****************************************************************************
