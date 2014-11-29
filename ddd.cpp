@@ -54,7 +54,7 @@
 // -----------------------------------------------------------------------------
 
 #include "dds/include/dll.h"
-#include "dds/include/portab.h"
+#include "portab_DDD.h"
 #include "giblib.h"
 #include "timer.h"
 
@@ -250,6 +250,8 @@ int main(int argc, char *argv[])
     else
       pszfile = argv[iarg];
   }
+
+  SetMaxThreads(0);
 
   if(gen > 0)
   { generate(gen,genseed,gencards,gentricks);
