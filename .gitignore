@@ -5,7 +5,4 @@
 *.obj
 *.exe
 *.def
-src/[Mm]akefile
-test/[Mm]akefile
-test/dtest
-test/itest
+[Mm]akefile
