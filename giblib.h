@@ -1,8 +1,8 @@
 /* **************************************************************************
-   giblib.h    giblib reader and state for bridge C/C++ programs
+   giblib.h giblib reader and state for bridge C/C++ programs
 
                PM Cronje June 2006
-               PM Cronje 13-Jul-2006  add deal genearator
+               PM Cronje 13-Jul-2006 add deal genearator
 
    Copyright 2006 P.M.Cronje
 
@@ -15,12 +15,12 @@
 
    DDD is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
    along with DDD; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
    ************************************************************************** */
 
@@ -143,135 +143,137 @@ class cGIBLib
 {
   public:
 
-                   // construct/destruct
-                   cGIBLib();
-                   ~cGIBLib();
+    // construct/destruct
+    cGIBLib();
+    ~cGIBLib();
 
-                   // print
-             void print();
-             void printHands();
-             void printInfo();
+    // print
+    void print();
+    void printHands();
+    void printInfo();
 
-                  // read deal (ideal0=0,1,2, ...) from GIBLib file
-             bool readFile(int ideal0, char *pszname, FILE *fileptr);
-                  // read next deal in the file
-             bool readDeal(FILE *fileptr);
+    // read deal (ideal0=0,1,2, ...) from GIBLib file
+    bool readFile(int ideal0, char * pszname, FILE * fileptr);
+    // read next deal in the file
+    bool readDeal(FILE * fileptr);
 
-                  // play a card (it be present in current player's hand)
-                  // all variables affected are updated
-             bool playCard(int suit, int card);
+    // play a card (it be present in current player's hand)
+    // all variables affected are updated
+    bool playCard(int suit, int card);
 
-                  // unplay previous card (there must be one or more played)
-             bool unplayCard();
+    // unplay previous card (there must be one or more played)
+    bool unplayCard();
 
-                  // number of cards in hand of player 0,1,2,3 (i.e. w,n,e,s)
-              int nPlayerCard(int pl);
+    // number of cards in hand of player 0,1,2,3 (i.e. w,n,e,s)
+    int nPlayerCard(int pl);
 
-                  // number of cards in all hands
-              int numCard();
+    // number of cards in all hands
+    int numCard();
 
-                  // decode szTricks[i], 0<=i<20
-                  // if successful returns true with result in
-                  //   *pleader/*ptrumps/*pntrick
-                  // if unsuccessful returns false with default result
-                  //   *pleader = ePLAYER_WEST
-                  //   *ptrumps = eCONTRACT_NOTRUMP
-                  //   *pntrick = 0
-             bool getTricks(int i, int *pleader, int *ptrumps, int *pntrick);
+    // decode szTricks[i], 0<=i<20
+    // if successful returns true with result in
+    // *pleader/*ptrumps/*pntrick
+    // if unsuccessful returns false with default result
+    // *pleader = ePLAYER_WEST
+    // *ptrumps = eCONTRACT_NOTRUMP
+    // *pntrick = 0
+    bool getTricks(int i, int * pleader, int * ptrumps, int * pntrick);
 
-                   // ----------------------------------------------------------
-                   // deal generation
-                   // ----------------------------------------------------------
+    // ----------------------------------------------------------
+    // deal generation
+    // ----------------------------------------------------------
 
-                   // generate a random deal
-                   //   this sets mPlayerSuit[4][4] only,
-                   //   nothing else,
-                   //   to set the giblib object,
-                   //   call setGeneratedDeal(...) after this
-                   // the idea is that you may want to do filtering on the deals
-                   // checking whether a deal is acceptable first, without
-                   // having the overhead of also setting the deal into the
-                   // giblib object
-              bool generateDeal(int ntrick);
+    // generate a random deal
+    // this sets mPlayerSuit[4][4] only,
+    // nothing else,
+    // to set the giblib object,
+    // call setGeneratedDeal(...) after this
+    // the idea is that you may want to do filtering on the deals
+    // checking whether a deal is acceptable first, without
+    // having the overhead of also setting the deal into the
+    // giblib object
+    bool generateDeal(int ntrick);
 
-                   // set generated deal,
-                   // call this only after generateDeal(...),
-                   // this will set szDeal and clear szTricks with '-',
-                   // and initialize some other variables
-              bool setGeneratedDeal();
+    // set generated deal,
+    // call this only after generateDeal(...),
+    // this will set szDeal and clear szTricks with '-',
+    // and initialize some other variables
+    bool setGeneratedDeal();
 
-                   // ----------------------------------------------------------
-                   // READ-ONLY public data (after successful read)
-                   // ----------------------------------------------------------
+    // ----------------------------------------------------------
+    // READ-ONLY public data (after successful read)
+    // ----------------------------------------------------------
 
-                   // date read: deal, giblib tricks, comment, name
-              char szDeal[68];
-              char szTricks[24];
-              char *pszComment, *pszName;
+    // date read: deal, giblib tricks, comment, name
+    char szDeal[68];
+    char szTricks[24];
+    char * pszComment, *pszName;
 
-                   // --------------------
-                   // play/unplay
-                   // --------------------
+    // --------------------
+    // play/unplay
+    // --------------------
 
-                   // cards played
-               int nPlayed;
-                   // player, suit, card for i=0,...,nPlayed-1
-               int PlayerPlayed[52], SuitPlayed[52], CardPlayed[52];
-                   // trick number 0,1,...
-                   // trick card 0,1,2,3
-                   // tricks won sofar by south/north and west/east
-               int nTrick, nTrickCard, nTrickSN, nTrickWE;
-                   // TrickStart is index into the three lists ...Played[52]
-                   // for the first card of this trick
-               int TrickStart;
-                   // suit led at this trick
-                   // player to this card of this trick
-                   // winning player this trick (at completion of trick)
-               int SuitLed, Player, WinningPlayer[13];
+    // cards played
+    int nPlayed;
+    // player, suit, card for i=0,...,nPlayed-1
+    int PlayerPlayed[52], SuitPlayed[52], CardPlayed[52];
+    // trick number 0,1,...
+    // trick card 0,1,2,3
+    // tricks won sofar by south/north and west/east
+    int nTrick, nTrickCard, nTrickSN, nTrickWE;
+    // TrickStart is index into the three lists ...Played[52]
+    // for the first card of this trick
+    int TrickStart;
+    // suit led at this trick
+    // player to this card of this trick
+    // winning player this trick (at completion of trick)
+    int SuitLed, Player, WinningPlayer[13];
 
-                   // failed calls write their error message here,
-                   // print this to see the reason
-              char szErrMsg[512];
+    // failed calls write their error message here,
+    // print this to see the reason
+    char szErrMsg[512];
 
-                   // ----------------------------------------------------------
-                   // READ-ONLY processed data (after successful read)
-                   // ----------------------------------------------------------
+    // ----------------------------------------------------------
+    // READ-ONLY processed data (after successful read)
+    // ----------------------------------------------------------
 
-               int Trumps;       // s=0,h=1,d=2,c=3,n=4
+    int Trumps; // s=0,h=1,d=2,c=3,n=4
 
-                   // leader of current trick
-               int Leader;       // w=0,n=1,e=2,s=3
+    // leader of current trick
+    int Leader; // w=0,n=1,e=2,s=3
 
-                   // bit masks of cards per player/suit:
-            ushort mPlayerSuit[4][4];        // [player][suit]
+    // bit masks of cards per player/suit:
+    ushort mPlayerSuit[4][4]; // [player][suit]
 
-                   // ----------------------------------------------------------
-                   // INTERNAL interface
-                   // ----------------------------------------------------------
+    // ----------------------------------------------------------
+    // INTERNAL interface
+    // ----------------------------------------------------------
 
-              char *pch, szLine[GIBLIB_LENLINE];
-               int nLine;
-              bool bFileEnd;
-              FILE *fp;
+    char * pch, szLine[GIBLIB_LENLINE];
+    int nLine;
+    bool bFileEnd;
+    FILE * fp;
 
- static enum eCard getCard(char chcard);
-              bool getOptions();
-       static char *printSuit(ushort m, char sz[]);
-              bool readComment();
-              bool readLine();
-              void reset();
-              bool setDeal();
-              bool setPlayed();
-              void setName(char *pszname);
-              bool skipComment();
+    static enum eCard getCard(char chcard);
+    bool getOptions();
+    static char * printSuit(ushort m, char sz[]);
+    bool readComment();
+    bool readLine();
+    void reset();
+    bool setDeal();
+    bool setPlayed();
+    void setName(char * pszname);
+    bool skipComment();
 
-                   // deal generator
-                   // uses RNG (random number generator)
-              cRNG *pRNG;
+    // deal generator
+    // uses RNG (random number generator)
+    cRNG * pRNG;
 
-                   // set the RNG seed
-              void setRNGSeed(unsigned int useed)
-                   { if(pRNG) pRNG->set(useed);}
+    // set the RNG seed
+    void setRNGSeed(unsigned int useed)
+    {
+      if (pRNG) pRNG->set(useed);
+    }
 
 }; // cGIBLib
 // -----------------------------------------------------------------------------
