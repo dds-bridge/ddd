@@ -1,0 +1,8 @@
+!.gitignore
+*.o
+*.a
+*.dll
+*.obj
+*.exe
+*.def
+[Mm]akefile

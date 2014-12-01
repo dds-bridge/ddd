@@ -27,11 +27,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/time.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
 
+#include "portab_DDD.h"
 #include "timer.h"
 
 // *****************************************************************************
@@ -41,11 +41,18 @@
 
 #if defined(_WIN32)
 
-typedef struct sFileTime
+struct sFileTime
 {
   unsigned int dwLowDateTime;
   unsigned int dwHighDateTime;
 };
+
+#ifdef _MSC_VER
+struct timeval
+{
+  long tv_sec, tv_usec;
+};
+#endif
 
 extern "C"
 {
@@ -64,8 +71,9 @@ void gettimeofday(struct timeval* p, void* pv)
 
   GetSystemTimeAsFileTime(&(now.ft));
 
-  p->tv_usec = (int)((now.ns100 / 10LL) % 1000000LL);
-  p->tv_sec  = (int)((now.ns100 - (116444736000000000LL))/10000000LL);
+  p->tv_usec = static_cast<int>((now.ns100 / 10LL) % 1000000LL);
+  p->tv_sec  = static_cast<int>((now.ns100 - (116444736000000000LL))/10000000LL);
+  UNUSED(pv);
 
 }
 
@@ -131,7 +139,8 @@ void cTimer::getTimerInfo(double *pdelapsed)
 
   // elapsed
   gettimeofday(&tv,0);
-  *pdelapsed = (double)tv.tv_sec + 0.000001 * (double)tv.tv_usec;
+  *pdelapsed = static_cast<double>(tv.tv_sec) + 
+    0.000001 * static_cast<double>(tv.tv_usec);
   if(*pdelapsed < 0.000001)
     *pdelapsed = 0.000001;
 

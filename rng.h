@@ -1,5 +1,5 @@
 // =============================================================================
-/* rng.cpp  RNG - random number generators
+/* rng.cpp RNG - random number generators
 
             PMC 14-jun-2005
             PMC 10-jul-2005
@@ -14,12 +14,12 @@
 
    RNG is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
    along with RNG; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 */
 // =============================================================================
@@ -34,9 +34,9 @@ typedef unsigned long long uint64;
 // -----------------------------------------------------------------------------
 
 void initEnt(bool binmode);
-void addEnt(unsigned char *buf, int buflen);
-void endEnt(double *r_ent, double *r_chisq, double *r_mean,
-            double *r_montepicalc, double *r_scc);
+void addEnt(unsigned char * buf, int buflen);
+void endEnt(double * r_ent, double * r_chisq, double * r_mean,
+            double * r_montepicalc, double * r_scc);
 void prtEnt(double r_chisq, double r_mean,
             double r_montepicalc, double r_scc);
 
@@ -46,12 +46,12 @@ void prtEnt(double r_chisq, double r_mean,
 
 enum eRNG
 {
-  eRNG_QD1    = 0,           // 'Quick and dirty' LCG
-  eRNG_MT     = 1,           // Mersenne Twister MT19937_02        (default)
-  eRNG_MTHR   = 2,           // 'Mother of all RNG' (Marsaglia)
-  eRNG_WELL   = 3,           // WELL1024a, single seed with run-in
+  eRNG_QD1 = 0, // 'Quick and dirty' LCG
+  eRNG_MT = 1, // Mersenne Twister MT19937_02 (default)
+  eRNG_MTHR = 2, // 'Mother of all RNG' (Marsaglia)
+  eRNG_WELL = 3, // WELL1024a, single seed with run-in
 
-  eRNG_COUNT  = 4
+  eRNG_COUNT = 4
 
 }; // enum eRNG
 // -----------------------------------------------------------------------------
@@ -73,23 +73,23 @@ enum eRNG
 //
 // The acronym WELL means 'Well Equidistributed Long-period Linear'
 // The generator WELL1024a has been modified to:
-//   - initialize with a single seed
-//   - generate equidistributed initial values
-//   - run for 50,000 numbers to escape from the initial setup
+// - initialize with a single seed
+// - generate equidistributed initial values
+// - run for 50,000 numbers to escape from the initial setup
 //
 // The generators mt/mthr are initialized from a single seed using a WELL.
 //
 // Speed (relative elapsed time for 10,000,000 numbers)
-//     qd1      1.00
-//     mt       1.25
-//     mthr     1.90
-//     well     1.41
+// qd1 1.00
+// mt 1.25
+// mthr 1.90
+// well 1.41
 //
 // -----------------------------------------------------------------------------
 
-extern const char *pszRNGGen[eRNG_COUNT];
-extern const char *pszRNGGenList;
-extern const char *pszRNGGenDefault;
+extern const char * pszRNGGen[eRNG_COUNT];
+extern const char * pszRNGGenList;
+extern const char * pszRNGGenDefault;
 enum eRNG const eRNGGenDefault = eRNG_MT;
 
 // -----------------------------------------------------------------------------
@@ -108,47 +108,51 @@ class cRNG_MT19937;
 class cRNG
 {
   public:
-           virtual ~cRNG()
-                     { }
+    virtual ~cRNG()
+    { }
 
-                   // set seed
-      virtual void set(unsigned int useed) = 0;
+    // set seed
+    virtual void set(unsigned int useed) = 0;
 
-                   // generator name
-      virtual char *getszRandom() = 0;
+    // generator name
+    virtual char * getszRandom() = 0;
 
-                   // next random number
-  virtual unsigned int random() = 0;
+    // next random number
+    virtual unsigned int random() = 0;
 
-                   // return random unsigned int, where 0 <= unsigned int < uirange
- virtual unsigned int randomUint(unsigned int urange);
+    // return random unsigned int, where 0 <= unsigned int < uirange
+    virtual unsigned int randomUint(unsigned int urange);
 
-                   // creates an instance of cRNG,
-                   // specifying either eRNG or a string identifier pszrng,
-                   // if pszgen incorrectly specified creates a cRNG_MT
-                   //
-                   //        erng        pszrng
-                   //     ---------     --------
-                   //     eRNG_QD1       "qd1"
-                   //     eRNG_MT        "mt"
-                   //     eRNG_MTHR      "mthr"
-                   //     eRNG_WELL      "well"
-                   //
-                   // note: the object must be deleted after use
+    // creates an instance of cRNG,
+    // specifying either eRNG or a string identifier pszrng,
+    // if pszgen incorrectly specified creates a cRNG_MT
+    //
+    // erng pszrng
+    // --------- --------
+    // eRNG_QD1 "qd1"
+    // eRNG_MT "mt"
+    // eRNG_MTHR "mthr"
+    // eRNG_WELL "well"
+    //
+    // note: the object must be deleted after use
 
-       static cRNG *createRNG(eRNG erng, unsigned int useed);
-       static cRNG *createRNG(char *pszrng, unsigned int useed);
+    static cRNG * createRNG(eRNG erng, unsigned int useed);
+    static cRNG * createRNG(char * pszrng, unsigned int useed);
 
-         enum eRNG getRNG()
-                     { return RNG;}
+    enum eRNG getRNG()
+    {
+      return RNG;
+    }
 
-        const char *getpszGen()
-                     { return (const char*)szGen;}
+    const char * getpszGen()
+    {
+      return static_cast<const char *>(szGen);
+    }
 
   protected:
-              eRNG RNG;
-              char szGen[16];
-      unsigned int uSeed;
+    eRNG RNG;
+    char szGen[16];
+    unsigned int uSeed;
 
 }; // cRNG
 // -----------------------------------------------------------------------------
@@ -156,22 +160,28 @@ class cRNG
 class cRNG_QD1 : public cRNG
 {
   public:
-                   cRNG_QD1(unsigned int useed=0)
-                     { set(useed);}
+    cRNG_QD1(unsigned int useed = 0)
+    {
+      set(useed);
+    }
 
-                   // set
-      virtual void set(unsigned int useed);
+    // set
+    virtual void set(unsigned int useed);
 
-                   // generator name
-      virtual char *getszRandom()
-                     { return "QD1";}
+    // generator name
+    virtual char * getszRandom()
+    {
+      return strdup("QD1");
+    }
 
-                   // next random number
+    // next random number
     virtual
-      unsigned int random();
+    unsigned int random();
 
-      unsigned int getSeed()
-                   { return uSeed;}
+    unsigned int getSeed()
+    {
+      return uSeed;
+    }
 
   protected:
 
@@ -181,22 +191,26 @@ class cRNG_QD1 : public cRNG
 class cRNG_WELL : public cRNG
 {
   public:
-                   cRNG_WELL(unsigned int useed=0)
-                     { set(useed);}
+    cRNG_WELL(unsigned int useed = 0)
+    {
+      set(useed);
+    }
 
-                   // set
-      virtual void set(unsigned int useed);
+    // set
+    virtual void set(unsigned int useed);
 
-                   // generator name
-      virtual char *getszRandom()
-                     { return "WELL1024u";}
+    // generator name
+    virtual char * getszRandom()
+    {
+      return strdup("WELL1024u");
+    }
 
-                   // next random number
+    // next random number
     virtual
-      unsigned int random();
+    unsigned int random();
 
   protected:
-      unsigned int state_i, STATE[32], z0, z1, z2;
+    unsigned int state_i, STATE[32], z0, z1, z2;
 
 }; // cRNG_WELL
 // -----------------------------------------------------------------------------
@@ -204,23 +218,27 @@ class cRNG_WELL : public cRNG
 class cRNG_Mother : public cRNG
 {
   public:
-                   cRNG_Mother(unsigned int useed=0)
-                     { set(useed);}
+    cRNG_Mother(unsigned int useed = 0)
+    {
+      set(useed);
+    }
 
-                   // set
-      virtual void set(unsigned int useed);
+    // set
+    virtual void set(unsigned int useed);
 
-                   // generator name
-      virtual char *getszRandom()
-                     { return "Mother";}
+    // generator name
+    virtual char * getszRandom()
+    {
+      return strdup("Mother");
+    }
 
-                   // next random number
+    // next random number
     virtual
-      unsigned int random();
+    unsigned int random();
 
   protected:
-      unsigned int smthr[4];
-            uint64 xm4, xm3, xm2, xm1, mcarry;
+    unsigned int smthr[4];
+    uint64 xm4, xm3, xm2, xm1, mcarry;
 
 }; // cRNG_Mother
 // -----------------------------------------------------------------------------
@@ -228,26 +246,30 @@ class cRNG_Mother : public cRNG
 class cRNG_MT19937 : public cRNG
 {
   public:
-                   cRNG_MT19937(unsigned int useed=0)
-                     { set(useed);}
+    cRNG_MT19937(unsigned int useed = 0)
+    {
+      set(useed);
+    }
 
-                   // set
-      virtual void set(unsigned int useed);
+    // set
+    virtual void set(unsigned int useed);
 
-                   // generator name
-      virtual char *getszRandom()
-                     { return "MT19937";}
+    // generator name
+    virtual char * getszRandom()
+    {
+      return strdup("MT19937");
+    }
 
-                   // next random number
+    // next random number
     virtual
-      unsigned int random();
+    unsigned int random();
 
   protected:
-      unsigned int mti, U[624];
-     unsigned long mag01[2];
+    unsigned int mti, U[624];
+    unsigned long mag01[2];
 
-         void initBySeed(unsigned int useed);
-         void initByArray(unsigned int lenkey, unsigned int key[]);
+    void initBySeed(unsigned int useed);
+    void initByArray(unsigned int lenkey, unsigned int key[]);
 
 
 }; // cRNG_MT19937

@@ -1,0 +1,87 @@
+# This is a Makefile for the ddd program,
+# for Linux and the GNU g++ compiler.
+
+# It does assume a Unix-like setup for some commands,
+# but if you only want to call "make" with the default target,
+# you should be OK.
+
+# The test program itself does not use multi-threading, 
+# but the DLL might, depending on how it was compiled.
+
+# If your compiler name is not given here, change it.
+CC		= g++
+
+# Use this one to get single-threading
+# CC_FLAGS	= -O3 -flto -mtune=generic
+# Use this one to get OpenMP multi-threading
+CC_FLAGS	= -O3 -flto -fopenmp -mtune=generic
+
+# These flags are not turned on by default, but DDS should pass them.
+# Turn them on below.
+WARN_FLAGS	= 		\
+	-Wshadow 		\
+	-Wsign-conversion 	\
+	-pedantic -Wall -Wextra  \
+	-Wcast-align -Wcast-qual \
+	-Wctor-dtor-privacy 	\
+	-Wdisabled-optimization \
+	-Winit-self 		\
+	-Wlogical-op 		\
+	-Wmissing-declarations 	\
+	-Wmissing-include-dirs 	\
+	-Wnoexcept 		\
+	-Wold-style-cast 	\
+	-Woverloaded-virtual 	\
+	-Wredundant-decls 	\
+	-Wsign-promo 		\
+	-Wstrict-null-sentinel 	\
+	-Wstrict-overflow=1 	\
+	-Wswitch-default -Wundef \
+	-Werror 		\
+	-Wno-unused 		\
+	-Wno-unknown-pragmas 	\
+	-Wno-long-long		\
+	-Wno-format
+
+# Here you can turn on warnings.
+# CC_FULL_FLAGS	= $(CC_FLAGS)
+CC_FULL_FLAGS	= $(CC_FLAGS) $(WARN_FLAGS)
+
+DTEST		= ddd
+
+DLLBASE		= dds
+STATIC_LIB	= lib$(DLLBASE).a
+
+# This is in addition to $(DTEST).cpp
+TEST_SOURCE_FILES 	=	\
+	ddd.cpp			\
+	defs.cpp		\
+	giblib.cpp		\
+	rng.cpp			\
+	timer.cpp
+
+LIB_FLAGS	= -L. -l$(DLLBASE)
+
+TEST_OBJ_FILES	= $(subst .cpp,.o,$(TEST_SOURCE_FILES))
+
+ddd:	$(TEST_OBJ_FILES)
+	$(CC) $(CC_FULL_FLAGS) $(TEST_OBJ_FILES) $(LD_FLAGS) $(LIB_FLAGS) -o $(DTEST)
+
+%.o:	%.cpp
+	$(CC) $(CC_FULL_FLAGS) -c $< -o $*.o
+
+depend:
+	makedepend -Y -- $(TEST_SOURCE_FILES) $(DTEST).cpp
+
+clean:
+	rm -f $(TEST_OBJ_FILES) $(DTEST) $(STATIC_LIB)
+
+
+# DO NOT DELETE
+
+ddd.o: dds/include/dll.h portab_DDD.h giblib.h defs.h rng.h timer.h
+defs.o: defs.h portab_DDD.h
+giblib.o: giblib.h defs.h rng.h
+rng.o: portab_DDD.h rng.h
+timer.o: portab_DDD.h timer.h
+ddd.o: dds/include/dll.h portab_DDD.h giblib.h defs.h rng.h timer.h

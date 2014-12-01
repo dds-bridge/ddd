@@ -1,5 +1,5 @@
 // =============================================================================
-/* rng.cpp  RNG - random number generators
+/* rng.cpp RNG - random number generators
 
             PMC 14-jun-2005
             PMC 06-jul-2005
@@ -14,12 +14,12 @@
 
    RNG is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
    along with RNG; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 */
 // =============================================================================
@@ -27,27 +27,34 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <math.h>
 
+#include "portab_DDD.h"
 #include "rng.h"
 
-const char *pszRNGGen[eRNG_COUNT]
-   = {
-       "qd1",
-       "mt",
-       "mthr",
-       "well"
-     };
+const char * pszRNGGen[eRNG_COUNT]
+=
+{
+  "qd1",
+  "mt",
+  "mthr",
+  "well"
+};
 
-const char *pszRNGGenList = "qd1/mt/mthr/well";
-const char *pszRNGGenDefault = "mt";
+const char * pszRNGGenList = "qd1/mt/mthr/well";
+const char * pszRNGGenDefault = "mt";
 
-double dRAN_SCALE = 1.0 / (1.0+double((unsigned int)(0xFFFFFFFF)));
+double dRAN_SCALE = 1.0 / (1.0 + double(static_cast<unsigned int>(0xFFFFFFFF)));
+
+unsigned int qd1(unsigned int * puseed);
+void reset1Bit(unsigned int u1bit, unsigned int * pu);
+unsigned int count1Bits(unsigned int useed);
+unsigned int qd1Uint(unsigned int * puseed, unsigned int urange);
+unsigned int equiDistribute1Bits(unsigned int u, unsigned int * puseed);
+void set0Bit(unsigned int u0bit, unsigned int * pu);
+double gammln(float xx);
+void gcf(double * gammcf, double aa, double x, double * gln);
+void gser(double * gamser, double aa, double x, double * gln);
 
 // *****************************************************************************
 // cRNG
@@ -55,24 +62,25 @@ double dRAN_SCALE = 1.0 / (1.0+double((unsigned int)(0xFFFFFFFF)));
 
 unsigned int cRNG::randomUint(unsigned int urange)
 {
-  return (unsigned int)((double)urange * (double)random() * dRAN_SCALE);
+  return static_cast<unsigned int>(static_cast<double>(urange) *
+                                   static_cast<double>(random()) * dRAN_SCALE);
 
 } // cRNG::randomUint
 // *****************************************************************************
 
-cRNG *cRNG::createRNG(eRNG erng, unsigned int useed)
+cRNG * cRNG::createRNG(eRNG erng, unsigned int useed)
 {
-  cRNG *prng;
+  cRNG * prng;
   int rng;
 
-  rng = (int)erng;
-  if(rng == eRNG_QD1)
+  rng = static_cast<int>(erng);
+  if (rng == eRNG_QD1)
     prng = new cRNG_QD1(useed);
-  else if(rng == eRNG_MTHR)
+  else if (rng == eRNG_MTHR)
     prng = new cRNG_Mother(useed);
   else if (rng == eRNG_WELL)
     prng = new cRNG_WELL(useed);
-  else // if(rng == eRNG_MT)                     // default
+  else // if(rng == eRNG_MT) // default
     prng = new cRNG_MT19937(useed);
 
   return prng;
@@ -80,17 +88,17 @@ cRNG *cRNG::createRNG(eRNG erng, unsigned int useed)
 } // cRNG::createRNG(erng)
 // *****************************************************************************
 
-cRNG *cRNG::createRNG(char *pszrng, unsigned int useed)
+cRNG * cRNG::createRNG(char * pszrng, unsigned int useed)
 {
-  cRNG *prng;
+  cRNG * prng;
 
-  if(0 == strcasecmp(pszrng,"qd1"))
+  if (0 == strcasecmp(pszrng, "qd1"))
     prng = new cRNG_QD1(useed);
-  else if(0 == strcasecmp(pszrng,"mthr"))
+  else if (0 == strcasecmp(pszrng, "mthr"))
     prng = new cRNG_Mother(useed);
-  else if (0 == strcasecmp(pszrng,"well"))
+  else if (0 == strcasecmp(pszrng, "well"))
     prng = new cRNG_WELL(useed);
-  else // if(0 == strcasecmp(pszrng,"mt"))       // default
+  else // if(0 == strcasecmp(pszrng,"mt")) // default
     prng = new cRNG_MT19937(useed);
 
   return prng;
@@ -105,12 +113,13 @@ void cRNG_QD1::set(unsigned int useed)
 {
   uSeed = useed;
   RNG = eRNG_QD1;
-  strcpy(szGen,pszRNGGen[RNG]);
+  strcpy(szGen, pszRNGGen[RNG]);
 }
 
 unsigned int cRNG_QD1::random()
 {
-  uSeed = ((unsigned int)(1664525L) * uSeed + (unsigned int)(1013904223L));
+  uSeed = (static_cast<unsigned int>(1664525L) * uSeed +
+           static_cast<unsigned int>(1013904223L));
   return uSeed;
 
 } // cRNG_QD1::random
@@ -118,17 +127,20 @@ unsigned int cRNG_QD1::random()
 // equiDistribute1Bits
 /* ************************************************************************** */
 
-unsigned int qd1(unsigned int *puseed)
+unsigned int qd1(unsigned int * puseed)
 {
-  *puseed = ((unsigned int)(1664525L) * (*puseed) + (unsigned int)(1013904223L));
+  *puseed = (static_cast<unsigned int>(1664525L) * (*puseed) +
+             static_cast<unsigned int>(1013904223L));
   return *puseed;
 
 } // qd1
 
-unsigned int qd1Uint(unsigned int *puseed, unsigned int urange)
+unsigned int qd1Uint(unsigned int * puseed, unsigned int urange)
 {
-  *puseed = ((unsigned int)(1664525L) * (*puseed) + (unsigned int)(1013904223L));
-  return (unsigned int)((double)urange * (double)(*puseed) * dRAN_SCALE);
+  *puseed = (static_cast<unsigned int>(1664525L) * (*puseed) +
+             static_cast<unsigned int>(1013904223L));
+  return static_cast<unsigned int>(static_cast<double>(urange) *
+                                   static_cast<double>(*puseed) * dRAN_SCALE);
 
 } // qd1Uint
 
@@ -139,8 +151,9 @@ unsigned int count1Bits(unsigned int useed)
   // count the number of 1-bits
   mask = 0x00000001;
   n1 = 0;
-  for(i=0; i<32; i++)
-  { if(mask & useed)
+  for (i = 0; i < 32; i++)
+  {
+    if (mask & useed)
       n1++;
     mask = (mask << 1);
   }
@@ -149,17 +162,20 @@ unsigned int count1Bits(unsigned int useed)
 
 } // count1Bits
 
-void reset1Bit(unsigned int u1bit, unsigned int *pu)
+void reset1Bit(unsigned int u1bit, unsigned int * pu)
 {
   unsigned int mask, n, i;
 
   // find and zero the bit
   mask = 0x00000001;
   n = 0;
-  for(i=0; i<32; i++)
-  { if(mask & (*pu))
-    { if(n == u1bit)
-      { *pu = ((*pu) & (~mask));
+  for (i = 0; i < 32; i++)
+  {
+    if (mask & (*pu))
+    {
+      if (n == u1bit)
+      {
+        *pu = ((*pu) & (~mask));
         return;
       }
       n++;
@@ -169,17 +185,20 @@ void reset1Bit(unsigned int u1bit, unsigned int *pu)
 
 } // reset1Bit
 
-void set0Bit(unsigned int u0bit, unsigned int *pu)
+void set0Bit(unsigned int u0bit, unsigned int * pu)
 {
   unsigned int mask, n, i;
 
   // find and set the bit
   mask = 0x00000001;
   n = 0;
-  for(i=0; i<32; i++)
-  { if(0 == (mask & (*pu)))
-    { if(n == u0bit)
-      { *pu = ((*pu) | mask);
+  for (i = 0; i < 32; i++)
+  {
+    if (0 == (mask & (*pu)))
+    {
+      if (n == u0bit)
+      {
+        *pu = ((*pu) | mask);
         return;
       }
       n++;
@@ -190,30 +209,34 @@ void set0Bit(unsigned int u0bit, unsigned int *pu)
 } // set0Bit
 
 
-unsigned int equiDistribute1Bits(unsigned int u, unsigned int *puseed)
+unsigned int equiDistribute1Bits(unsigned int u, unsigned int * puseed)
 {
   // if number of 1-bits in useed not 16,
-  //   if excess of 1-bits, randomly reset them to 0-bits
-  //   if excess of 0-bits, randomly set them to 1-bits
+  // if excess of 1-bits, randomly reset them to 0-bits
+  // if excess of 0-bits, randomly set them to 1-bits
 
-  unsigned int n1, i,ueq, ubit, n0;
+  unsigned int n1, i, ueq, ubit, n0;
 
   // count the number of 1-bits
   n1 = count1Bits(u);
 
   ueq = u;
 
-  if(n1 > 16)
-  { for(i=n1; i>16; i--)
-    { ubit = qd1Uint(puseed,i);
-      reset1Bit(ubit,&ueq);
+  if (n1 > 16)
+  {
+    for (i = n1; i > 16; i--)
+    {
+      ubit = qd1Uint(puseed, i);
+      reset1Bit(ubit, &ueq);
     }
   }
-  else if(n1 < 16)
-  { n0 = 32 - n1;
-    for(i=n0; i>16; i--)
-    { ubit = qd1Uint(puseed,i);
-      set0Bit(ubit,&ueq);
+  else if (n1 < 16)
+  {
+    n0 = 32 - n1;
+    for (i = n0; i > 16; i--)
+    {
+      ubit = qd1Uint(puseed, i);
+      set0Bit(ubit, &ueq);
     }
   }
 
@@ -234,23 +257,23 @@ unsigned int equiDistribute1Bits(unsigned int u, unsigned int *puseed)
 #define M2 24
 #define M3 10
 
-#define V0     STATE[ state_i                  ]
-#define VM1    STATE[(state_i+M1) & 0x0000001fU]
-#define VM2    STATE[(state_i+M2) & 0x0000001fU]
-#define VM3    STATE[(state_i+M3) & 0x0000001fU]
-#define VRm1   STATE[(state_i+31) & 0x0000001fU]
-#define newV0  STATE[(state_i+31) & 0x0000001fU]
-#define newV1  STATE[ state_i                  ]
+#define V0 STATE[ state_i ]
+#define VM1 STATE[(state_i+M1) & 0x0000001fU]
+#define VM2 STATE[(state_i+M2) & 0x0000001fU]
+#define VM3 STATE[(state_i+M3) & 0x0000001fU]
+#define VRm1 STATE[(state_i+31) & 0x0000001fU]
+#define newV0 STATE[(state_i+31) & 0x0000001fU]
+#define newV1 STATE[ state_i ]
 
 unsigned int cRNG_WELL::random()
 {
-  z0      = VRm1;
-  z1      = Identity(V0)       ^ MAT0POS(  8, VM1);
-  z2      = MAT0NEG (-19, VM2) ^ MAT0NEG(-14, VM3);
-  newV1   = z1                 ^ z2;
-  newV0   =   MAT0NEG(-11,z0)
-            ^ MAT0NEG( -7,z1)
-            ^ MAT0NEG(-13,z2);
+  z0 = VRm1;
+  z1 = Identity(V0) ^ MAT0POS( 8, VM1);
+  z2 = MAT0NEG (-19, VM2) ^ MAT0NEG(-14, VM3);
+  newV1 = z1 ^ z2;
+  newV0 = MAT0NEG(-11, z0)
+              ^ MAT0NEG( -7, z1)
+              ^ MAT0NEG(-13, z2);
 
   state_i = (state_i + 31) & 0x0000001fU;
 
@@ -278,7 +301,7 @@ void cRNG_WELL::set(unsigned int useed)
   unsigned int u, uqd1seed;
 
   RNG = eRNG_WELL;
-  strcpy(szGen,pszRNGGen[RNG]);
+  strcpy(szGen, pszRNGGen[RNG]);
 
   /* initialize
      using specified seed, set state mixing 0 and 1 bits
@@ -287,12 +310,13 @@ void cRNG_WELL::set(unsigned int useed)
   state_i = 0;
   u = uqd1seed = useed;
   for (j = 0; j < 32; j++)
-  { STATE[j] = equiDistribute1Bits(u,&useed);
+  {
+    STATE[j] = equiDistribute1Bits(u, &useed);
     u = qd1(&useed);
   }
 
   /* run the generator for a while to escape from the seeded state */
-  for(j=0; j<50000; j++)
+  for (j = 0; j < 50000; j++)
     random();
 
 } // cRNG_WELL::set
@@ -303,7 +327,7 @@ void cRNG_WELL::set(unsigned int useed)
 void cRNG_Mother::set(unsigned int useed)
 {
   RNG = eRNG_MTHR;
-  strcpy(szGen,pszRNGGen[RNG]);
+  strcpy(szGen, pszRNGGen[RNG]);
   uSeed = useed;
 
   smthr[0] = 5115;
@@ -311,37 +335,37 @@ void cRNG_Mother::set(unsigned int useed)
   smthr[2] = 1492;
   smthr[3] = 2111111111;
 
-  xm1    = (uint64)smthr[0];
-  xm2    = (uint64)smthr[1];
-  xm3    = (uint64)smthr[2];
-  xm4    = (uint64)smthr[3];
+  xm1 = static_cast<uint64>(smthr[0]);
+  xm2 = static_cast<uint64>(smthr[1]);
+  xm3 = static_cast<uint64>(smthr[2]);
+  xm4 = static_cast<uint64>(smthr[3]);
 
-  unsigned int sum = xm1 + xm2 + xm3 + xm4;
+  unsigned int sum = static_cast<unsigned>(xm1 + xm2 + xm3 + xm4);
   cRNG_WELL rng(uSeed);
-  mcarry = (uint64)rng.randomUint(sum);
+  mcarry = static_cast<uint64>(rng.randomUint(sum));
 
 } // cRNG_Mother::set
 
 unsigned int cRNG_Mother::random()
 {
-  static uint64 am1 = (uint64)2111111111;
-  static uint64 am2 = (uint64)1492;
-  static uint64 am3 = (uint64)1776;
-  static uint64 am4 = (uint64)5115;
+  static uint64 am1 = static_cast<uint64>(2111111111);
+  static uint64 am2 = static_cast<uint64>(1492);
+  static uint64 am3 = static_cast<uint64>(1776);
+  static uint64 am4 = static_cast<uint64>(5115);
 
   uint64 x = am1 * xm1
-           + am2 * xm2
-           + am3 * xm3
-           + am4 * xm4
-           + mcarry;
+             + am2 * xm2
+             + am3 * xm3
+             + am4 * xm4
+             + mcarry;
 
-  xm1    = xm2;
-  xm2    = xm3;
-  xm3    = xm4;
-  xm4    = (x & 0x00000000ffffffffULL);
+  xm1 = xm2;
+  xm2 = xm3;
+  xm3 = xm4;
+  xm4 = (x & 0x00000000ffffffffULL);
   mcarry = (x >> 32);
 
-  return (unsigned int)xm4;
+  return static_cast<unsigned int>(xm4);
 
 } // cRNG_Mother::random
 // *****************************************************************************
@@ -353,25 +377,25 @@ unsigned int cRNG_Mother::random()
 /* Period parameters */
 #define N 624
 #define M 397
-#define MATRIX_A 0x9908b0dfUL   /* constant vector a */
+#define MATRIX_A 0x9908b0dfUL /* constant vector a */
 #define UPPER_MASK 0x80000000UL /* most significant w-r bits */
 #define LOWER_MASK 0x7fffffffUL /* least significant r bits */
 
-// static unsigned long mt[N]; /* the array for the state vector  */
+// static unsigned long mt[N]; /* the array for the state vector */
 // static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
 
 /* initializes mt[N] with a seed */
 
 void cRNG_MT19937::initBySeed(unsigned int useed)
 {
-  U[0]= useed & 0xffffffffUL;
-  for (mti=1; mti<N; mti++)
+  U[0] = useed & 0xffffffffUL;
+  for (mti = 1; mti < N; mti++)
   {
-    U[mti] = (1812433253UL * (U[mti-1] ^ (U[mti-1] >> 30)) + mti);
+    U[mti] = (1812433253UL * (U[mti - 1] ^ (U[mti - 1] >> 30)) + mti);
     /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
-    /* In the previous versions, MSBs of the seed affect   */
-    /* only MSBs of the array p->U[].                        */
-    /* 2002/01/09 modified by Makoto Matsumoto             */
+    /* In the previous versions, MSBs of the seed affect */
+    /* only MSBs of the array p->U[]. */
+    /* 2002/01/09 modified by Makoto Matsumoto */
     U[mti] &= 0xffffffffUL;
     /* for >32 bit machines */
   }
@@ -390,24 +414,34 @@ void cRNG_MT19937::initByArray(unsigned int lenkey, unsigned int key[])
 
   initBySeed(19650218UL);
 
-  i=1; j=0;
-  k = (N>lenkey ? N : lenkey);
+  i = 1;
+  j = 0;
+  k = (N > lenkey ? N : static_cast<int>(lenkey));
   for (; k; k--)
   {
-    U[i] = (U[i] ^ ((U[i-1] ^ (U[i-1] >> 30)) * 1664525UL))
-      + key[j] + j; /* non linear */
-    U[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
-    i++; j++;
-    if (i>=N) { U[0] = U[N-1]; i=1; }
-    if (j>=(int)lenkey) j=0;
-  }
-  for (k=N-1; k; k--)
-  {
-    U[i] = (U[i] ^ ((U[i-1] ^ (U[i-1] >> 30)) * 1566083941UL))
-      - i; /* non linear */
+    U[i] = (U[i] ^ ((U[i - 1] ^ (U[i - 1] >> 30)) * 1664525UL))
+           + key[j] + static_cast<unsigned>(j); /* non linear */
     U[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
     i++;
-    if (i>=N) { U[0] = U[N-1]; i=1; }
+    j++;
+    if (i >= N)
+    {
+      U[0] = U[N - 1];
+      i = 1;
+    }
+    if (j >= static_cast<int>(lenkey)) j = 0;
+  }
+  for (k = N - 1; k; k--)
+  {
+    U[i] = (U[i] ^ ((U[i - 1] ^ (U[i - 1] >> 30)) * 1566083941UL))
+           - static_cast<unsigned>(i); /* non linear */
+    U[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
+    i++;
+    if (i >= N)
+    {
+      U[0] = U[N - 1];
+      i = 1;
+    }
   }
 
   U[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */
@@ -421,15 +455,15 @@ void cRNG_MT19937::set(unsigned int useed)
 
   uSeed = useed;
   RNG = eRNG_MT;
-  strcpy(szGen,pszRNGGen[RNG]);
+  strcpy(szGen, pszRNGGen[RNG]);
   cRNG_WELL rng(useed);
 
   mag01[0] = 0x0UL;
   mag01[1] = MATRIX_A;
 
-  for(i=0; i<624; i++)
+  for (i = 0; i < 624; i++)
     key[i] = rng.random();
-  initByArray(624,key);
+  initByArray(624, key);
 
 } // cRNG_MT19937::set
 
@@ -440,23 +474,26 @@ unsigned int cRNG_MT19937::random()
   unsigned long y;
 
   if (mti >= N)
-  { /* generate N words at one time */
+  {
+    /* generate N words at one time */
 
     int kk;
 
-    if (mti == N+1)   /* if not initalized, */
-      initBySeed(5489UL);      /* a default initial seed is used */
+    if (mti == N + 1) /* if not initalized, */
+      initBySeed(5489UL); /* a default initial seed is used */
 
-    for (kk=0;kk<N-M;kk++)
-    { y = (U[kk]&UPPER_MASK)|(U[kk+1]&LOWER_MASK);
-      U[kk] = U[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    for (kk = 0; kk < N - M; kk++)
+    {
+      y = (U[kk] & UPPER_MASK) | (U[kk + 1] & LOWER_MASK);
+      U[kk] = U[kk + M] ^ (y >> 1) ^ mag01[y & 0x1UL];
     }
-    for (;kk<N-1;kk++)
-    { y = (U[kk]&UPPER_MASK)|(U[kk+1]&LOWER_MASK);
-      U[kk] = U[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    for (; kk < N - 1; kk++)
+    {
+      y = (U[kk] & UPPER_MASK) | (U[kk + 1] & LOWER_MASK);
+      U[kk] = U[kk + (M - N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
     }
-    y = (U[N-1]&UPPER_MASK)|(U[0]&LOWER_MASK);
-    U[N-1] = U[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
+    y = (U[N - 1] & UPPER_MASK) | (U[0] & LOWER_MASK);
+    U[N - 1] = U[M - 1] ^ (y >> 1) ^ mag01[y & 0x1UL];
 
     mti = 0;
   }
@@ -499,26 +536,26 @@ static long totalc = 0;
 /* Probabilities per bin for entropy */
 static double prob[256];
 
-/*  LOG2  --  Calculate log to the base 2  */
+/* LOG2 -- Calculate log to the base 2 */
 //static double log2(double x)
 //{
-//    return log2of10 * log10(x);
+// return log2of10 * log10(x);
 //}
 
 /* Bytes used as Monte Carlo
-   co-ordinates.  This should be no more
+   co-ordinates. This should be no more
    bits than the mantissa of your
    "double" floating point type.
 */
-#define MONTEN  6
+#define MONTEN 6
 
 static int mp;
 static bool sccfirst;
 static unsigned int monte[MONTEN];
 static long inmont, mcount;
 static double a, cexp, incirc, montex, montey, montepi,
-        scc, sccun, sccu0, scclast, scct1, scct2, scct3,
-        ent, chisq, datasum;
+       scc, sccun, sccu0, scclast, scct1, scct2, scct3,
+       ent, chisq, datasum;
 
 void initEnt(bool binmode)
 {
@@ -529,19 +566,19 @@ void initEnt(bool binmode)
 
   /* Initialise for calculations */
 
-  ent = 0.0;             /* Clear entropy accumulator */
-  chisq = 0.0;           /* Clear Chi-Square */
-  datasum = 0.0;         /* Clear sum of bytes for arithmetic mean */
+  ent = 0.0; /* Clear entropy accumulator */
+  chisq = 0.0; /* Clear Chi-Square */
+  datasum = 0.0; /* Clear sum of bytes for arithmetic mean */
 
-  mp = 0;                     /* Reset Monte Carlo accumulator pointer */
-  mcount = 0;                 /* Clear Monte Carlo tries */
-  inmont = 0;                 /* Clear Monte Carlo inside count */
+  mp = 0; /* Reset Monte Carlo accumulator pointer */
+  mcount = 0; /* Clear Monte Carlo tries */
+  inmont = 0; /* Clear Monte Carlo inside count */
   incirc = 65535.0 * 65535.0; /* In-circle distance for Monte Carlo */
 
-  sccfirst = true;             /* Mark first time for serial correlation */
+  sccfirst = true; /* Mark first time for serial correlation */
   scct1 = scct2 = scct3 = 0.0; /* Clear serial correlation terms */
 
-  incirc = pow(pow(256.0, (double) (MONTEN / 2)) - 1, 2.0);
+  incirc = pow(pow(256.0, static_cast<double> (MONTEN / 2)) - 1, 2.0);
 
   for (i = 0; i < 256; i++)
     ccount[i] = 0;
@@ -549,9 +586,9 @@ void initEnt(bool binmode)
 
 } // initEnt
 
-void addEnt(unsigned char *buf, int buflen)
+void addEnt(unsigned char * buf, int buflen)
 {
-  unsigned char *bp = buf;
+  unsigned char * bp = buf;
   int oc, c, bean;
 
   while (bean = 0, (buflen-- > 0))
@@ -564,26 +601,28 @@ void addEnt(unsigned char *buf, int buflen)
         c = !!(oc & 0x80);
       else
         c = oc;
-      ccount[c]++;      /* Update counter for this bin */
+      ccount[c]++; /* Update counter for this bin */
       totalc++;
 
       /* Update inside/outside circle counts for Monte Carlo computation of PI */
 
       if (bean == 0)
       {
-        monte[mp++] = oc;       /* Save character for Monte Carlo */
+        monte[mp++] = static_cast<unsigned>(oc); /* Save character for Monte Carlo */
         if (mp >= MONTEN)
-        {  /* Calculate every MONTEN character */
+        {
+          /* Calculate every MONTEN character */
           int mj;
 
           mp = 0;
           mcount++;
           montex = montey = 0;
           for (mj = 0; mj < MONTEN / 2; mj++)
-          { montex = (montex * 256.0) + monte[mj];
+          {
+            montex = (montex * 256.0) + monte[mj];
             montey = (montey * 256.0) + monte[(MONTEN / 2) + mj];
           }
-          if ((montex * montex + montey *  montey) <= incirc)
+          if ((montex * montex + montey * montey) <= incirc)
             inmont++;
         }
       }
@@ -592,7 +631,8 @@ void addEnt(unsigned char *buf, int buflen)
 
       sccun = c;
       if (sccfirst)
-      { sccfirst = false;
+      {
+        sccfirst = false;
         scclast = 0;
         sccu0 = sccun;
       }
@@ -602,13 +642,14 @@ void addEnt(unsigned char *buf, int buflen)
       scct3 = scct3 + (sccun * sccun);
       scclast = sccun;
       oc <<= 1;
-    } while (binary && (++bean < 8));
+    }
+    while (binary && (++bean < 8));
   }
 
 } // addEnt
 
-void endEnt(double *r_ent, double *r_chisq, double *r_mean,
-            double *r_montepicalc, double *r_scc)
+void endEnt(double * r_ent, double * r_chisq, double * r_mean,
+            double * r_montepicalc, double * r_scc)
 {
   int i;
 
@@ -625,18 +666,20 @@ void endEnt(double *r_ent, double *r_chisq, double *r_mean,
   /* Scan bins and calculate probability for each bin and
      Chi-Square distribution */
 
-  cexp = totalc / (binary ? 2.0 : 256.0);  /* Expected count per bin */
+  cexp = totalc / (binary ? 2.0 : 256.0); /* Expected count per bin */
   for (i = 0; i < (binary ? 2 : 256); i++)
-  { prob[i] = (double) ccount[i] / totalc;
+  {
+    prob[i] = static_cast<double>(ccount[i]) / totalc;
     a = ccount[i] - cexp;
     chisq = chisq + (a * a) / cexp;
-    datasum += ((double) i) * ccount[i];
+    datasum += (static_cast<double>(i)) * ccount[i];
   }
 
   /* Calculate entropy */
 
   for (i = 0; i < (binary ? 2 : 256); i++)
-  { if (prob[i] > 0.0)
+  {
+    if (prob[i] > 0.0)
       ent += prob[i] * log2(1 / prob[i]);
   }
 
@@ -644,7 +687,7 @@ void endEnt(double *r_ent, double *r_chisq, double *r_mean,
      within the circle
   */
 
-  montepi = 4.0 * (((double) inmont) / mcount);
+  montepi = 4.0 * ((static_cast<double>(inmont)) / mcount);
 
   /* Return results through arguments */
 
@@ -661,40 +704,41 @@ void prtEnt(double r_chisq, double r_mean,
 {
   // probability that observed chi^2 will exceed the value chi^2
   // by chance EVEN for a correct model:
-  //     Q(chi^2,nu) = gammaq(nu/2,chi^2/2);
+  // Q(chi^2,nu) = gammaq(nu/2,chi^2/2);
   //
-  double probq = 100.0 * gammq(127.5,0.5*r_chisq);
+  double probq = 100.0 * gammq(127.5, 0.5 * r_chisq);
 
-  printf("  %ss,Entropy,Chi-square,Mean,Monte-Carlo-Pi,Serial-Correlation\n",
+  printf(" %ss,Entropy,Chi-square,Mean,Monte-Carlo-Pi,Serial-Correlation\n",
          binary ? "bit" : "byte");
-  printf("  %ld,%f,%.1f(%.2f%%),%f,%f(%.2f%%),%f\n",
-           //totalc,ent,r_chisq,100.0*chip,r_mean,
-           totalc,ent,r_chisq,probq,r_mean,
-           r_montepicalc,100.0*(r_montepicalc-PI),r_scc);
+  printf(" %ld,%f,%.1f(%.2f%%),%f,%f(%.2f%%),%f\n",
+         //totalc,ent,r_chisq,100.0*chip,r_mean,
+         totalc, ent, r_chisq, probq, r_mean,
+         r_montepicalc, 100.0 * (r_montepicalc - PI), r_scc);
 
 } // prtEnt
 // *****************************************************************************
+
 
 double gammln(float xx)
 {
   double x, y, tmp, ser;
   static double cof[6]
-    = {  76.18009172947146,
-        -86.50532032941677,
+    = { 76.18009172947146,
+         -86.50532032941677,
          24.01409824083091,
          -1.231739572450155,
-          0.1208650973866179e-2,
+         0.1208650973866179e-2,
          -0.5395239384953e-5
       };
   int j;
 
-  y=x=xx;
-  tmp=x+5.5;
-  tmp -= (x+0.5)*log(tmp);
-  ser=1.000000000190015;
-  for (j=0;j<=5;j++)
-    ser += cof[j]/++y;
-  return -tmp+log(2.5066282746310005*ser/x);
+  y = x = xx;
+  tmp = x + 5.5;
+  tmp -= (x + 0.5) * log(tmp);
+  ser = 1.000000000190015;
+  for (j = 0; j <= 5; j++)
+    ser += cof[j] / ++y;
+  return -tmp + log(2.5066282746310005 * ser / x);
 
 } // gammln
 // *****************************************************************************
@@ -702,36 +746,39 @@ double gammln(float xx)
 #define EPS 3.0e-7
 #define FPMIN 1.0e-30
 
-void gcf(double *gammcf, double a, double x, double *gln)
+
+void gcf(double * gammcf, double aa, double x, double * gln)
 {
   int i;
   double an, b, c, d, del, h;
 
-  *gln=gammln(a);
-  b=x+1.0-a;
-  c=1.0/FPMIN;
-  d=1.0/b;
-  h=d;
-  for (i=1;i<=ITMAX;i++)
-  { an = -i*(i-a);
+  *gln = gammln(static_cast<float>(aa));
+  b = x + 1.0 - aa;
+  c = 1.0 / FPMIN;
+  d = 1.0 / b;
+  h = d;
+  for (i = 1; i <= ITMAX; i++)
+  {
+    an = -i * (i - aa);
     b += 2.0;
-    d=an*d+b;
+    d = an * d + b;
     if (fabs(d) < FPMIN)
-      d=FPMIN;
-    c=b+an/c;
+      d = FPMIN;
+    c = b + an / c;
     if (fabs(c) < FPMIN)
-      c=FPMIN;
-    d=1.0/d;
-    del=d*c;
+      c = FPMIN;
+    d = 1.0 / d;
+    del = d * c;
     h *= del;
-    if (fabs(del-1.0) < EPS)
+    if (fabs(del - 1.0) < EPS)
       break;
   }
   if (i > ITMAX)
-  { printf("*** error %s: a too large, ITMAX too small\n",__func__);
+  {
+    printf("*** error %s: a too large, ITMAX too small\n", "gcf");
     exit(1);
   }
-  *gammcf=exp(-x+a*log(x)-(*gln))*h;
+  *gammcf = exp(-x + aa * log(x) - (*gln)) * h;
 
 } // gcf
 
@@ -742,35 +789,39 @@ void gcf(double *gammcf, double a, double x, double *gln)
 #define ITMAX 100
 #define EPS 3.0e-7
 
-void gser(double *gamser, double a, double x, double *gln)
+
+void gser(double * gamser, double aa, double x, double * gln)
 {
   int n;
-  double sum,del,ap;
+  double sum, del, ap;
 
-  *gln=gammln(a);
+  *gln = gammln(static_cast<float>(aa));
   if (x <= 0.0)
   {
     if (x < 0.0)
-    { printf("*** error %s: x less than 0\n",__func__);
+    {
+      printf("*** error %s: x less than 0\n", "gser");
       exit(1);
     }
-    *gamser=0.0;
+    *gamser = 0.0;
     return;
   }
   else
   {
-    ap=a;
-    del=sum=1.0/a;
-    for (n=1;n<=ITMAX;n++)
-    { ++ap;
-      del *= x/ap;
+    ap = aa;
+    del = sum = 1.0 / aa;
+    for (n = 1; n <= ITMAX; n++)
+    {
+      ++ap;
+      del *= x / ap;
       sum += del;
       if (fabs(del) < fabs(sum)*EPS)
-      { *gamser=sum*exp(-x+a*log(x)-(*gln));
+      {
+        *gamser = sum * exp(-x + aa * log(x) - (*gln));
         return;
       }
     }
-    printf("*** error %s: a too large, ITMAX too small\n",__func__);
+    printf("*** error %s: a too large, ITMAX too small\n", "gser");
     exit(1);
   }
 
@@ -780,21 +831,23 @@ void gser(double *gamser, double a, double x, double *gln)
 #undef EPS
 // *****************************************************************************
 
-double gammq(double a, double x)
+double gammq(double aa, double x)
 {
   double gamser, gammcf, gln;
 
   if (x < 0.0 || a <= 0.0)
-  { printf("*** error %s: invalid arguments\n",__func__);
+  {
+    printf("*** error %s: invalid arguments\n", "gammq");
     exit(1);
   }
-  if (x < (a+1.0))
-  { gser(&gamser,a,x,&gln);
-    return 1.0-gamser;
+  if (x < (aa + 1.0))
+  {
+    gser(&gamser, aa, x, &gln);
+    return 1.0 - gamser;
   }
   else
   {
-    gcf(&gammcf,a,x,&gln);
+    gcf(&gammcf, aa, x, &gln);
     return gammcf;
   }
 
